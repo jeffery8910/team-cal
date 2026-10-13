@@ -14,3 +14,5 @@
 
 ## 管理員密碼
 只以雜湊存在 D1 `settings` 表（`k='admin_hash'`，值 = SHA-256("tc4admin:" + 密碼)）。
+
+最後更新：2026-10-13（接上 Cloudflare 自動部署）
