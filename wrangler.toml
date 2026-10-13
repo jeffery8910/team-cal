@@ -1,0 +1,8 @@
+name = "team-cal"
+main = "src/api.js"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "team-cal"
+database_id = "cf47d5e9-c099-4242-b155-1ddc86c44acc"

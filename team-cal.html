@@ -1,0 +1,899 @@
+<title>揪團日曆</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Zen+Maru+Gothic:wght@700&display=swap">
+<style>
+/* Layout: pine "band" header holding title + member pills; below it a wizard (step card left, live calendar right on desktop; stacked with floating nav on phone). Cards float on a warm paper ground with soft shadows, controls are pills. */
+:root{
+  --bg:#f4f1ea; --paper:#fbf9f4; --surface:#ffffff; --sunk:#efebe2; --ink:#16241f; --muted:#6f7a72; --line:#e3ddd1;
+  --band:#17322a; --band-ink:#f4f1ea; --band-soft:rgba(244,241,234,.12); --band-muted:rgba(244,241,234,.66);
+  --accent:#17322a; --accent-ink:#ffffff; --cta:#ee6a45; --cta-ink:#ffffff;
+  --ok:#2f7d5b; --on-ok:#ffffff; --ok-bg:#dcefe3; --no:#c4523d; --no-bg:#f7e2dc;
+  --hol:#c4523d; --hol-bg:#fbe9e4; --fest:#a8741a; --fest-bg:#f8edd3;
+  --sun:#c4523d; --sat:#3b66b0;
+  --p1:#3b66b0; --p2:#1f8a86; --p3:#7d4fb0; --p4:#c7742a;
+  --shadow:0 1px 2px rgba(23,50,42,.05),0 10px 30px rgba(23,50,42,.07);
+  --r:24px;
+  --display:"Zen Maru Gothic","Noto Sans TC",system-ui,sans-serif;
+  --body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1714; --paper:#131d19; --surface:#18241f; --sunk:#202e28; --ink:#ebefe9; --muted:#9ba69e; --line:#2a3832;
+  --band:#0b1210; --band-ink:#ebefe9; --band-soft:rgba(235,239,233,.08); --band-muted:rgba(235,239,233,.6);
+  --accent:#9fd4b8; --accent-ink:#0f2a1c; --cta:#f08462; --cta-ink:#1b0d07;
+  --ok:#7fcfa3; --on-ok:#0f2a1c; --ok-bg:#1d3a2c; --no:#f08a75; --no-bg:#3a2320;
+  --hol:#f08a75; --hol-bg:#3a2420; --fest:#e5b75a; --fest-bg:#3a3020;
+  --sun:#f08a75; --sat:#88a9ea; --p1:#88a9ea; --p2:#5fc7c1; --p3:#b993e6; --p4:#eba765;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1714; --paper:#131d19; --surface:#18241f; --sunk:#202e28; --ink:#ebefe9; --muted:#9ba69e; --line:#2a3832;
+  --band:#0b1210; --band-ink:#ebefe9; --band-soft:rgba(235,239,233,.08); --band-muted:rgba(235,239,233,.6);
+  --accent:#9fd4b8; --accent-ink:#0f2a1c; --cta:#f08462; --cta-ink:#1b0d07;
+  --ok:#7fcfa3; --on-ok:#0f2a1c; --ok-bg:#1d3a2c; --no:#f08a75; --no-bg:#3a2320;
+  --hol:#f08a75; --hol-bg:#3a2420; --fest:#e5b75a; --fest-bg:#3a3020;
+  --sun:#f08a75; --sat:#88a9ea; --p1:#88a9ea; --p2:#5fc7c1; --p3:#b993e6; --p4:#eba765;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2.5px solid var(--cta);outline-offset:2px}
+
+/* ---------- band ---------- */
+.band{background:var(--band);color:var(--band-ink);padding-inline:16px;padding-block:22px 18px}
+.band-in{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-direction:column;gap:4px}
+.eyebrow{font-size:12px;letter-spacing:.16em;color:var(--cta);font-weight:700}
+header h1{font-family:var(--display);font-size:clamp(28px,5.4vw,42px);margin:0;letter-spacing:.02em;line-height:1.1;text-wrap:balance}
+header p{margin:0;color:var(--band-muted);font-size:14px}
+.toprow{display:flex;align-items:flex-start;gap:12px}
+.toprow header{flex:1;min-width:0}
+.adminbtn{flex:none;display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:7px 12px 7px 9px;background:var(--band-soft);color:var(--band-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.adminbtn svg{width:18px;height:18px}
+.adminbtn.on{background:var(--cta);color:var(--cta-ink)}
+.alist{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
+.arow{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 8px;border-radius:16px;background:var(--paper)}
+.arow .av{width:32px;height:32px}
+.arow b{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arow small{color:var(--muted);font-size:12px;white-space:nowrap}
+.arow .del{border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:700;background:var(--no-bg);color:var(--no);cursor:pointer}
+.addrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.addrow input{flex:1;min-width:140px}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.swatches button{width:28px;height:28px;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.people{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding:2px 16px}
+.people::-webkit-scrollbar{display:none}
+.pbtn{flex:none;display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border:0;border-radius:999px;background:var(--band-soft);color:var(--band-ink);font:inherit;cursor:pointer;text-align:left;transition:background .15s}
+.pbtn:hover{background:rgba(244,241,234,.2)}
+.pbtn[aria-pressed="true"]{background:var(--band-ink);color:var(--band)}
+.av{width:36px;height:36px;border-radius:50%;display:block;overflow:hidden;flex:none;position:relative}
+.av svg{display:block;width:100%;height:100%}
+.pbtn .av{width:40px;height:40px}
+.pmeta{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.pname{font-weight:700;font-size:14px;white-space:nowrap}
+.pstat{font-size:11px;opacity:.7;display:flex;align-items:center;gap:3px}
+.pstat svg{width:11px;height:11px}
+.pbtn.all .av{background:var(--cta);color:var(--cta-ink)}
+.av.grp{color:#fff}
+
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 32px;display:flex;flex-direction:column;gap:18px}
+.banner{background:var(--fest-bg);color:var(--fest);border-radius:14px;padding:10px 14px;font-size:13px}
+.panel{display:flex;flex-direction:column;gap:18px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.linkbtn{border:0;background:none;color:var(--ok);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:999px;border:0;background:var(--sunk);color:var(--ink);cursor:pointer;transition:transform .1s,filter .15s}
+.btn:hover{filter:brightness(.97)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--cta);color:var(--cta-ink);box-shadow:0 6px 16px rgba(238,106,69,.28)}
+.btn.danger{background:none;color:var(--no);box-shadow:inset 0 0 0 1.5px var(--no)}
+.btn.big{padding:13px 22px;font-size:15px}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ---------- wizard ---------- */
+.wizbar{margin-bottom:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border-radius:999px;padding:5px;box-shadow:var(--shadow);position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:4}
+.wz{display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:none;font:inherit;color:var(--muted);cursor:pointer;padding:8px 4px;border-radius:999px;min-width:0;transition:background .2s,color .2s}
+.wz .wn{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--sunk);flex:none}
+.wz .wt{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wz.done{color:var(--ok)}.wz.done .wn{background:var(--ok);color:var(--on-ok)}
+.wz.cur{background:var(--band);color:var(--band-ink)}.wz.cur .wn{background:var(--cta);color:var(--cta-ink)}
+.me{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+@media (min-width:980px){.me{grid-template-columns:440px minmax(0,1fr)}.stepcard{position:sticky;top:calc(70px + env(safe-area-inset-top,0px));max-height:calc(100vh - 86px);overflow:auto}}
+.stepcard{background:var(--surface);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:16px;min-width:0;box-shadow:var(--shadow)}
+.whohead{display:flex;align-items:flex-start;gap:12px}
+.whohead .av{width:44px;height:44px;font-size:17px;box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--sunk)}
+.whohead .eyebrow{color:var(--muted)}
+.stepcard h2{font-family:var(--display);font-size:clamp(23px,4.6vw,30px);margin:2px 0 0;line-height:1.25;text-wrap:balance}
+.lead{margin:0;font-size:15px;color:var(--ink);opacity:.85}
+.note{background:var(--fest-bg);color:var(--fest);border-radius:14px;padding:10px 14px;font-size:13px}
+.subhead{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-top:4px}
+.tips{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.tips li{background:var(--paper);border-radius:14px;padding:10px 14px}
+.wiznav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wiznav .btn.pri{flex:1;max-width:300px;padding:13px 20px;font-size:15px}
+
+/* tally bar */
+.tbar{display:flex;flex-direction:column;gap:8px}
+.tbar .track{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--sunk);gap:2px}
+.tbar .track i{display:block;height:100%}
+.tbar .keys{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.tbar .keys span{display:flex;align-items:center;gap:5px}
+.tbar .keys b{color:var(--ink);font-variant-numeric:tabular-nums}
+.k-filled{background:var(--ok)}.k-ok{background:var(--ok-bg);box-shadow:inset 0 0 0 1.5px var(--ok)}.k-no{background:var(--no)}.k-na{background:var(--line)}
+.tbar .keys i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+/* rules & segmented pills */
+.rule{display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:18px;background:var(--paper)}
+.rule .lbl{display:flex;flex-direction:column;min-width:0;flex:1;font-weight:700;font-size:14px}
+.rule .lbl small{color:var(--muted);font-size:12px;font-weight:400}
+.rule.sm{padding-block:6px}
+.seg{display:flex;gap:2px;flex:none;background:var(--sunk);border-radius:999px;padding:3px}
+.seg button{font:inherit;font-size:13px;font-weight:700;padding:6px 12px;border-radius:999px;border:0;background:none;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.seg button[data-v="ok"][aria-pressed="true"]{background:var(--ok);color:var(--on-ok)}
+.seg button[data-v="no"][aria-pressed="true"]{background:var(--no);color:#fff}
+.seg button[data-v="clr"]{font-weight:500;font-size:12px}
+.seg button:disabled{opacity:.3;cursor:default}
+details.more{border-radius:18px;background:var(--paper);padding:2px 6px 8px}
+details.more summary{cursor:pointer;font-weight:700;font-size:14px;padding:10px;color:var(--ok);list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"＋ "}
+details.more[open] summary::before{content:"－ "}
+details.more .rule,details.more .trow{background:var(--surface);margin-top:6px}
+.mseg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--sunk);border-radius:999px;padding:4px}
+.modesw{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--sunk);border-radius:22px;padding:4px}
+.modesw button{font:inherit;border:0;background:none;border-radius:18px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:1px;color:var(--muted);text-align:left;transition:background .15s,color .15s}
+.modesw button b{font-size:15px}
+.modesw button small{font-size:12px}
+.modesw button[aria-checked="true"]{background:var(--band);color:var(--band-ink)}
+.modesw button[aria-checked="true"] small{color:var(--band-muted)}
+.mseg.off{opacity:.35}
+.mseg.off button{cursor:not-allowed}
+.mseg.four{grid-template-columns:repeat(4,1fr)}
+.mseg button{font:inherit;font-weight:700;padding:10px 0;border-radius:999px;border:0;background:none;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.mseg button[data-v="ok"][aria-pressed="true"]{background:var(--ok);color:var(--on-ok)}
+.mseg button[data-v="no"][aria-pressed="true"]{background:var(--no);color:#fff}
+.mseg button[data-v="na"][aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.mseg button[data-v=""][aria-pressed="true"]{background:var(--band);color:var(--band-ink)}
+
+/* time rows */
+.trow{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l b" "t t";gap:10px;align-items:center;padding:14px 14px 14px 16px;border-radius:18px;background:var(--paper)}
+.trow.main{background:var(--ok-bg)}
+.trow.tbx{grid-template-areas:"l b" "t t"}
+.trow .nt{grid-area:b;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ok);cursor:pointer;white-space:nowrap}
+.trow .nt input{width:18px;height:18px;accent-color:var(--ok)}
+.trow.notime{background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--ok)}
+.sumcard{display:flex;flex-direction:column;gap:8px}
+.sl{display:grid;grid-template-columns:86px minmax(0,1fr);gap:10px;align-items:start;padding:12px 14px;border-radius:18px;background:var(--paper);font-size:14px}
+.sl .tag{font-size:12px;font-weight:700;padding:3px 0;border-radius:999px;text-align:center}
+.sl>div{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;min-width:0}
+.sl .rr{font-weight:700}.sl .dl{color:var(--ink);opacity:.8;width:100%}.sl .plus{color:var(--muted);font-size:13px}
+.sl em{font-style:normal;font-size:12px;color:var(--muted)}
+.sl .none{color:var(--muted)}.sl .warn{width:100%;color:var(--fest);font-size:13px}
+.s-ok{background:var(--ok-bg)}.s-ok .tag{background:var(--ok);color:var(--on-ok)}
+.s-tm .tag{background:var(--band);color:var(--band-ink)}
+.s-no{background:var(--no-bg)}.s-no .tag{background:var(--no);color:#fff}
+.s-na .tag{background:var(--line);color:var(--muted)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act{font:inherit;display:flex;align-items:center;gap:10px;text-align:left;border:0;cursor:pointer;padding:12px;border-radius:20px;background:var(--paper);color:var(--ink);transition:transform .12s}
+.act:active{transform:scale(.97)}
+.act svg{width:40px;height:40px;flex:none}
+.act span{display:flex;flex-direction:column;min-width:0}
+.act b{font-size:14px}.act small{font-size:12px;color:var(--muted)}
+.act.main{grid-column:1/-1;background:var(--cta);color:var(--cta-ink);padding:14px 16px;box-shadow:0 8px 20px rgba(238,106,69,.28)}
+.act.main svg{width:52px;height:52px;background:rgba(255,255,255,.18);border-radius:16px;padding:4px}
+.act.main b{font-size:17px}.act.main small{color:var(--cta-ink);opacity:.85}
+.act.warn b{color:var(--no)}
+.bigic svg{width:56px;height:56px}
+details.nofold{border-radius:18px;background:var(--no-bg);color:var(--no)}
+details.nofold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;padding:11px 16px;font-weight:700;font-size:14px}
+details.nofold summary::-webkit-details-marker{display:none}
+details.nofold summary::after{content:"＋";margin-left:auto;font-weight:700}
+details.nofold[open] summary::after{content:"－"}
+details.nofold summary small{font-weight:400;font-size:12px;opacity:.85}
+details.nofold .trow{margin:0 6px 6px;background:var(--surface);color:var(--ink)}
+details.more details.nofold{margin-top:6px}
+.trow .lbl{grid-area:l;display:flex;flex-direction:column;font-weight:700;font-size:14px}
+.trow .lbl small{color:var(--muted);font-weight:400;font-size:12px}
+.trow .tt{grid-area:t;display:flex;align-items:center;gap:8px}
+.trow .btn{grid-area:b;padding:8px 14px;font-size:13px;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line)}
+.trow .btn.pri{background:var(--cta);box-shadow:0 6px 16px rgba(238,106,69,.25)}
+.times{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.t24{display:flex;align-items:center;gap:2px;flex:1;min-width:0;background:var(--surface);border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--line);padding:2px 6px}
+.t24:focus-within{box-shadow:inset 0 0 0 2px var(--ok)}
+.t24 select{flex:1;min-width:0;border:0;background:none;color:var(--ink);font:inherit;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;padding:7px 2px;text-align:center;text-align-last:center;appearance:none;-webkit-appearance:none;cursor:pointer}
+.t24 select:focus{outline:none}
+.t24 b{color:var(--muted)}
+input[type="time"],.modal input{font:inherit;font-variant-numeric:tabular-nums;padding:9px 12px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:var(--surface);color:var(--ink);min-width:0;flex:1}
+input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok);outline:none}
+
+/* ---------- calendar ---------- */
+.calhead{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tapcall{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow)}
+.tapcall.live{background:var(--band);color:var(--band-ink)}
+.tapcall.live small{color:var(--band-muted)}
+.tapcall svg{width:30px;height:30px;flex:none;color:var(--cta)}
+.tapcall b{display:block;font-size:15px}
+.tapcall small{color:var(--muted);font-size:13px}
+.tapcall .btn{margin-left:auto;flex:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);align-items:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:14px;height:14px;border-radius:5px;display:inline-block}
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.month{background:var(--surface);border-radius:var(--r);padding:16px 12px 12px;box-shadow:var(--shadow);container-type:inline-size}
+.month h3{font-family:var(--display);font-size:26px;margin:0 6px 10px;display:flex;align-items:baseline;gap:8px;line-height:1}
+.month h3 small{font-family:var(--body);font-size:13px;color:var(--muted);font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(3px,1.2cqw,6px)}
+.wd{text-align:center;font-size:clamp(11px,3cqw,13px);color:var(--muted);padding-bottom:4px;font-weight:700}
+.wd.s0{color:var(--sun)}.wd.s6{color:var(--sat)}
+.day{position:relative;aspect-ratio:1/1;overflow:hidden;min-height:0;width:100%;border-radius:clamp(10px,3.4cqw,16px);border:0;background:transparent;font:inherit;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(0px,.6cqw,3px);padding:0;min-width:0;font-variant-numeric:tabular-nums;transition:transform .12s,background .15s;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.day .n{font-size:clamp(14px,4.8cqw,21px);font-weight:700;line-height:1}
+.day .lb{font-size:clamp(9px,2.6cqw,12px);line-height:1.1;white-space:nowrap;overflow:hidden;max-width:96%;font-weight:500}
+.day.s0 .n{color:var(--sun)}.day.s6 .n{color:var(--sat)}
+.day.hol .n,.day.hol .lb{color:var(--hol)}
+.day.fest .lb{color:var(--fest)}
+@media (hover:hover){.day:hover{transform:translateY(-1px)}}
+.day.pressing{transform:scale(.9);transition:transform .5s}
+.blank{aspect-ratio:1/1}
+.day.st-na{background:var(--paper)}
+.day.st-no{background:var(--no-bg)}
+.day.st-no .n{color:var(--no)!important;text-decoration:line-through;text-decoration-thickness:2px}
+.day.st-ok{background:var(--ok-bg);box-shadow:inset 0 0 0 1.5px var(--ok)}
+.day.st-filled{background:var(--ok)}
+.day.st-filled .n,.day.st-filled .lb{color:var(--on-ok)!important}
+.day .lb.tm{font-weight:700;display:flex;flex-direction:column;align-items:center;line-height:1.08;font-size:clamp(8.5px,2.5cqw,12px);letter-spacing:-.02em}
+.day.focus{box-shadow:0 0 0 3px var(--band),0 0 0 5px var(--cta)}
+.day.pick{box-shadow:0 0 0 3px var(--cta);transform:scale(.94)}
+/* merged view cells */
+.day .lb.tm1{font-weight:700;font-size:clamp(8px,2.3cqw,11px);letter-spacing:-.03em}
+.dots{display:flex;gap:2px;margin-top:1px}
+.dot{width:clamp(5px,1.4cqw,7px);height:clamp(5px,1.4cqw,7px);border-radius:50%;background:var(--line)}
+.dot.ok{background:var(--ok)}.dot.no{background:var(--no)}
+.day.most{background:var(--ok-bg)}
+.day.all4{background:var(--ok)}
+.day.all4 .n,.day.all4 .lb{color:var(--on-ok)!important}
+.day.all4 .dot{background:var(--on-ok);opacity:.85}
+.day.sel{box-shadow:0 0 0 3px var(--cta)}
+
+/* ---------- merged ---------- */
+.hero{background:var(--band);color:var(--band-ink);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.hero::after,.hero::before{content:"";position:absolute;border-radius:50%;border:1.5px solid var(--cta);opacity:.35;pointer-events:none}
+.hero::after{right:-70px;top:-70px;width:240px;height:240px}
+.hero::before{right:-20px;top:-20px;width:140px;height:140px;opacity:.55}
+.hero .k{font-size:12px;letter-spacing:.16em;color:var(--cta);font-weight:700}
+.hero .big{font-family:var(--display);font-size:clamp(32px,7vw,52px);line-height:1.05}
+.hero .sub{color:var(--band-muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;position:relative;z-index:1}
+.chip{padding:6px 12px;border-radius:999px;background:var(--band-soft);color:var(--band-ink);font-size:13px;font-weight:700;border:0;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
+.chip:hover{background:rgba(244,241,234,.22)}
+.roster{display:flex;flex-wrap:wrap;gap:8px;position:relative;z-index:1}
+.roster span{display:flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--band-soft);font-size:13px;font-weight:700}
+.roster span.off{opacity:.5}
+.roster .av{width:24px;height:24px;font-size:11px}
+.card{background:var(--surface);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0;box-shadow:var(--shadow)}
+.card h2{font-size:17px;margin:0}
+.who{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.who div{display:flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;border-radius:999px;background:var(--paper);font-size:14px;min-width:0}
+.who .st{margin-left:auto;font-weight:700;font-size:12px;white-space:nowrap}
+.st.ok{color:var(--ok)}.st.no{color:var(--no)}.st.na{color:var(--muted)}
+.guide{background:var(--surface);border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:var(--shadow)}
+.guide h2{font-family:var(--display);margin:0;font-size:clamp(24px,5vw,32px)}
+.gsteps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.gsteps li{background:var(--paper);border-radius:20px;padding:16px;display:flex;gap:12px;align-items:flex-start}
+.gsteps .num{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--band);color:var(--band-ink);flex:none}
+.gsteps b{display:block}
+.gsteps small{color:var(--muted)}
+.startrow{display:flex;flex-wrap:wrap;gap:8px}
+.startrow .btn{display:flex;align-items:center;gap:8px;padding:6px 16px 6px 6px;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--line)}
+.startrow .av{width:28px;height:28px;font-size:12px}
+.empty{padding:28px;text-align:center;color:var(--muted);background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
+
+/* ---------- overlays ---------- */
+.scrim{position:fixed;inset:0;background:rgba(10,20,16,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:grid;place-items:end center;padding:16px;z-index:10}
+@media (min-width:641px){.scrim{place-items:center}}
+.modal{background:var(--surface);color:var(--ink);border-radius:28px;padding:24px;width:min(420px,100%);display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.modal{position:relative}
+.mx{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:0;background:var(--sunk);color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.mx:hover{color:var(--ink)}
+.mx svg{width:18px;height:18px}
+.modal h2{padding-right:40px;margin:0;font-size:21px;font-family:var(--display)}
+.modal input{width:100%}
+.err{color:var(--no);font-size:13px;margin:0;min-height:1em}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--cta);color:var(--cta-ink);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;z-index:20;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.bulk{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--band);color:var(--band-ink);border-radius:22px 22px 0 0;padding:12px max(16px,calc((100% - 1180px)/2)) calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;box-shadow:0 -8px 24px rgba(0,0,0,.18)}
+.bulk .brow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.bulk .brow.sel{border-top:1px solid var(--band-soft);padding-top:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.bulk .brow.sel::-webkit-scrollbar{display:none}
+.bulk .brow.sel button,.rchip{display:inline-flex;flex:none;border-radius:999px;background:var(--band-soft);overflow:hidden}
+.bulk .rchip button{background:none;border-radius:0;padding:6px 6px 6px 11px}
+.bulk .rchip .clk{padding:6px 9px 6px 6px;display:grid;place-items:center;border-left:1px solid rgba(255,255,255,.15)}
+.bulk .rchip .clk svg{width:15px;height:15px}
+.bulk .rchip .clk:disabled{opacity:.3}
+.rchip.r-ok{background:var(--ok)}.rchip.r-ok button{color:var(--on-ok)}
+.rchip.r-no{background:var(--no)}.rchip.r-no button{color:#fff}
+.bulk .bl{flex:none;white-space:nowrap}
+.bulk .bn{padding:0 8px;font-size:13px;margin-right:auto}
+.bulk .bn b{font-size:20px;font-family:var(--display)}
+.bulk button{font:inherit;font-size:13px;font-weight:700;padding:8px 13px;border-radius:999px;border:0;background:var(--band-soft);color:var(--band-ink);cursor:pointer}
+.bulk button.b-pri{background:var(--cta);color:var(--cta-ink)}
+.bulk .brow.sel button{padding:6px 10px;font-size:12px}
+.rchip{display:inline-flex;flex:none;border-radius:999px;background:var(--band-soft);overflow:hidden}
+.bulk .rchip button{background:none;border-radius:0;padding:6px 6px 6px 11px}
+.bulk .rchip .clk{padding:6px 9px 6px 6px;display:grid;place-items:center;border-left:1px solid rgba(255,255,255,.15)}
+.bulk .rchip .clk svg{width:15px;height:15px}
+.bulk .rchip .clk:disabled{opacity:.3}
+.rchip.r-ok{background:var(--ok)}.rchip.r-ok button{color:var(--on-ok)}
+.rchip.r-no{background:var(--no)}.rchip.r-no button{color:#fff}
+.bulk .bl{font-size:12px;opacity:.65;margin-right:2px}
+.bulk button:disabled{opacity:.3;cursor:default}
+
+@media (max-width:640px){
+  body{font-size:14px}
+  .band{padding-block:16px 14px}
+  .wrap{padding-block:14px 24px;gap:14px}
+  .stepcard{padding:18px;border-radius:22px}
+  .wiznav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(23,50,42,.12)}
+  .wiznav .btn.pri{max-width:none}
+  .wiznav.hide{display:none}
+  .wz .wt{font-size:12px}
+  .wz{gap:4px;padding:8px 2px}
+  .hero{padding:20px;border-radius:24px}
+  .guide{padding:18px}
+  .tapcall{padding:12px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="band"><div class="band-in">
+  <div class="toprow"><header>
+    <span class="eyebrow">2026.11 – 2027.03</span>
+    <h1>揪團日曆</h1>
+    <p>每個人標好自己的空檔，系統自動找出大家都能約的日子。</p>
+  </header><button class="adminbtn" id="adminBtn" aria-label="管理員"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.2 12.2l2 2 3.8-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>管理</span></button></div>
+  <nav class="people" id="people" aria-label="選擇成員"></nav>
+</div></div>
+<div class="wrap">
+  <div id="banner" class="banner" hidden></div>
+  <main id="main"></main>
+</div>
+<div id="modal" class="scrim" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+let PEOPLE=[
+  {id:"lanya",name:"嵐颯",init:"嵐",c:"var(--p2)"},
+  {id:"patrick",name:"Patrick",init:"P",c:"var(--p1)"},
+  {id:"qingtong",name:"青彤",init:"青",c:"var(--p3)"},
+  {id:"haitang",name:"海棠Jeffery",init:"海",c:"var(--p4)"}];
+const MONTHS=[[2026,11],[2026,12],[2027,1],[2027,2],[2027,3]];
+const HOL={"2026-12-25":"行憲","2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕","2027-02-06":"初一","2027-02-07":"初二","2027-02-08":"初三","2027-02-09":"補假","2027-02-10":"補假","2027-02-28":"228","2027-03-01":"補假"};
+const FEST={"2026-12-22":"冬至","2027-02-20":"元宵"};
+const WD=["日","一","二","三","四","五","六"];
+const TIMES=[];for(let h=0;h<=24;h++)for(const m of[0,30]){if(h===24&&m)break;TIMES.push(String(h).padStart(2,"0")+":"+(m?"30":"00"))}
+const LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
+
+const SKIN="#f3cfae",CHEEK="#ef9f92",EYE="#2a211d";
+function faceSVG(id){/* 中性剪影：圓頭＋肩膀，不分性別，只用顏色區分 */
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15.5" r="7.2" fill="rgba(255,255,255,.92)"/><path d="M6.5 41c.9-9.6 6.4-14.6 13.5-14.6S32.6 31.4 33.5 41z" fill="rgba(255,255,255,.92)"/></svg>`}
+const S={det:{},people:{},view:"all",sel:null,db:null,local:false,ready:false,multi:false,selDays:new Set(),step:1};
+const unlocked=new Set();
+try{JSON.parse(sessionStorage.getItem("unlocked")||"[]").forEach(x=>unlocked.add(x))}catch(e){}
+function saveUnlocked(){try{sessionStorage.setItem("unlocked",JSON.stringify([...unlocked]))}catch(e){}}
+
+const pad=n=>String(n).padStart(2,"0");
+const key=(y,m,d)=>`${y}-${pad(m)}-${pad(d)}`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function fmt(k){const[y,m,d]=k.split("-").map(Number);return `${m}/${d}（${WD[new Date(y,m-1,d).getDay()]}）`}
+
+function blankRules(){return{weekday:"",offday:"",holiday:"",dow:["","","","","","",""]}}
+function blank(){return{setup:true,pw:null,brush:"ok",dates:{},dayTimes:{},rules:blankRules(),time:{from:"10:30",to:"16:30"}}}
+function norm(p){if(!p)return p;const r=p.rules||{};
+  if(!Array.isArray(r.dow)||r.dow.length!==7||typeof r.weekday==="boolean"||typeof r.holiday==="boolean"){
+    const n=blankRules();
+    if(r.holiday===true)n.holiday="no";if(r.weekend===true)n.offday="no";if(r.weekday===true)n.weekday="no";
+    if(Array.isArray(r.dow))r.dow.forEach(d=>{if(typeof d==="number")n.dow[d]="no"});
+    p.rules=n}
+  p.dates=p.dates||{};for(const k in p.dates){if(!["ok","no","na"].includes(p.dates[k]))p.dates[k]=p.mode==="ok"?"ok":"no"}
+  p.dayTimes=p.dayTimes||{};p.time=p.time||{from:"10:30",to:"16:30"};p.brush=["ok","no","na"].includes(p.brush)?p.brush:"ok";p.catTime=p.catTime||{};return p}
+
+/* 優先順序：手動設定 > 國定假日 > 星期幾 > 平日／假日 > 未填 */
+/* 套用到這天的規則中，最後設定的那條優先（沒有時間記錄時：國定假日 > 星期幾 > 平日／假日） */
+function ruleFor(p,k,dow){const r=p.rules||blankRules(),ts=p.ruleTs||{},c=[];
+  const off=dow===0||dow===6||!!HOL[k];
+  if(HOL[k]&&r.holiday)c.push(["holiday",r.holiday,3]);
+  if(r.dow&&r.dow[dow])c.push(["dow"+dow,r.dow[dow],2]);
+  if(off&&r.offday)c.push(["offday",r.offday,1]);
+  if(!off&&r.weekday)c.push(["weekday",r.weekday,1]);
+  if(!c.length)return null;
+  c.sort((a,b)=>b[2]-a[2]);/* 越具體越優先：國定假日 > 星期幾 > 平日／假日 */
+  return c[0][1]}
+function dowOf(k){const[y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d).getDay()}
+function status(p,k,dow){ if(!p||!p.setup)return "na";
+  const o=p.dates&&p.dates[k];if(o==="ok"||o==="no"||o==="na")return o;
+  return ruleFor(p,k,dow)||"na"}
+/* 四種狀態：filled 已填（可以＋時段）、ok 可以（時段未填）、no 不行、na 未填 */
+function state(p,k,dow){const s=status(p,k,dow);return s==="ok"&&p.dayTimes&&p.dayTimes[k]?"filled":s}
+function timeFor(p,k){return (p&&p.dayTimes&&p.dayTimes[k])||null}
+const tl=(a,b)=>`<span class="lb tm"><span>${hh(a)}</span><span>${hh(b)}</span></span>`;
+const hh=t=>{const h=+t.slice(0,2),m=t.slice(3,5);return m==="00"?String(h):h+":"+m};
+function dayOverlap(k,dow){const f=PEOPLE.map(x=>S.people[x.id]).filter(q=>q&&status(q,k,dow)==="ok"&&timeFor(q,k));if(!f.length)return null;
+  const from=f.map(q=>timeFor(q,k).from).sort().pop(),to=f.map(q=>timeFor(q,k).to).sort()[0];return{from,to,ok:from<to,n:f.length}}
+
+async function hash(s){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("tc4:"+s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=5381;for(const c of "tc4:"+s)h=(h*33+c.charCodeAt(0))>>>0;return "h"+h}}
+
+/* ---------- storage ---------- */
+const timers={},chains={},pending={};
+function persist(id){
+  pending[id]=true;clearTimeout(timers[id]);
+  const me=timers[id]=setTimeout(()=>{
+    const body=JSON.parse(JSON.stringify(S.people[id]));body.updatedAt=Date.now();
+    chains[id]=(chains[id]||Promise.resolve()).then(async()=>{
+      if(S.api){try{const r=await fetch("/api/people/"+id,{method:"PUT",headers:{"content-type":"application/json"},body:JSON.stringify(body)});if(!r.ok)throw 0}catch(e){toast("儲存失敗，請檢查網路後再試")}}
+      else if(S.local){try{localStorage.setItem("tc4:"+id,JSON.stringify(body))}catch(e){}}
+      else{try{await S.db.collection("people").doc(id).set(body)}catch(e){toast(e&&e.code==="invalid_argument"?"你沒有編輯權限，內容沒有存起來":"儲存失敗，請稍後再試")}}
+    }).finally(()=>{if(timers[id]===me)pending[id]=false});
+  },500);
+}
+function loadLocal(){for(const p of PEOPLE){try{const v=localStorage.getItem("tc4:"+p.id);if(v)S.people[p.id]=norm(JSON.parse(v))}catch(e){}}}
+
+/* ---------- render ---------- */
+function renderPeople(){
+  const el=document.getElementById("people");
+  el.innerHTML=PEOPLE.map(p=>{const d=S.people[p.id];
+    const st=!S.ready?"載入中…":!d?"還沒填":d.prefill?"管理員已預填":(d.pw?LOCK+" 已填寫":"已填寫");
+    return `<button class="pbtn" data-p="${p.id}" aria-pressed="${S.view==="me"&&S.sel===p.id}"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><span class="pmeta"><span class="pname">我是 ${esc(p.name)}</span><span class="pstat">${st}</span></span></button>`}).join("")+
+    `<button class="pbtn all" data-p="__all" aria-pressed="${S.view==="all"}"><span class="av grp"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="13" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M4 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="27" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M18 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="20" cy="14" r="6" fill="currentColor"/><path d="M9.5 34c.8-7 5.2-10.4 10.5-10.4S29.7 27 30.5 34z" fill="currentColor"/></svg></span><span class="pmeta"><span class="pname">合併結果</span><span class="pstat">${PEOPLE.filter(p=>S.people[p.id]).length}/${PEOPLE.length} 人已填</span></span></button>`;
+}
+
+function monthsHTML(cellFn){
+  return `<div class="months">`+MONTHS.map(([y,m])=>{
+    const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();
+    let h=`<section class="month"><h3>${m}月<small>${y}</small></h3><div class="grid">`+WD.map((w,i)=>`<div class="wd s${i}">${w}</div>`).join("");
+    for(let i=0;i<first;i++)h+=`<div class="blank"></div>`;
+    for(let d=1;d<=n;d++){const k=key(y,m,d),dow=(first+d-1)%7;h+=cellFn(k,d,dow)}
+    return h+`</div></section>`}).join("")+`</div>`;
+}
+function lab(k){return HOL[k]?`<span class="lb">${HOL[k]}</span>`:FEST[k]?`<span class="lb">${FEST[k]}</span>`:""}
+function baseCls(k,dow){return `day s${dow}${HOL[k]?" hol":""}${FEST[k]?" fest":""}`}
+
+function ruleRow(f,t,sub,v,sm){return `<div class="rule${sm?" sm":""}"><span class="lbl">${t}${sub?`<small>${sub}</small>`:""}</span><span class="seg" role="group" aria-label="${t}"><button data-rule="${f}" data-v="ok" aria-pressed="${v==="ok"}">可以</button><button data-rule="${f}" data-v="no" aria-pressed="${v==="no"}">不行</button><button data-rule="${f}" data-v="clr"${v?"":" disabled"}>重置</button></span></div>`}
+function eachDay(fn){for(const[y,m]of MONTHS){const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();for(let d=1;d<=n;d++)fn(key(y,m,d),(first+d-1)%7)}}
+const STL={filled:"已填",ok:"可以",no:"不行",na:"未填"};
+const CATS=[["weekday","平日","一到五，不含國定假日"],["offday","假日","週末＋國定假日"],["holiday","國定假日","11 天"]].concat(WD.map((w,i)=>["dow"+i,"星期"+w,""]));
+function inCat(c,k,dow){if(c==="all")return true;if(c==="weekday")return dow>=1&&dow<=5&&!HOL[k];if(c==="offday")return dow===0||dow===6||!!HOL[k];if(c==="holiday")return !!HOL[k];return dow===+c.slice(3)}
+function catLabel(c){if(c==="all")return "全部可以的日子";const x=CATS.find(z=>z[0]===c);return x?x[1]:c}
+function catTargets(p,c){const out=[];eachDay((k,dow)=>{if(!inCat(c,k,dow))return;const st=status(p,k,dow);if(c==="all"?st==="ok":st!=="no")out.push(k)});return out}
+function startStep(id){try{const v=JSON.parse(localStorage.getItem("tc4ui:"+id)||"null");if(v&&v.step)return v.step}catch(e){}const p=S.people[id];if(!p)return 1;let any=false;eachDay((k,dow)=>{if(status(p,k,dow)!=="na")any=true});return any?3:1}
+/* 24 小時制時間選擇：時、分兩個下拉，值存在隱藏欄位（HH:MM） */
+function tIn(id,v,attrs){const[h,m]=(v||"10:30").split(":");const o=(n,sel)=>Array.from({length:n},(_,i)=>{const x=String(i).padStart(2,"0");return `<option${x===sel?" selected":""}>${x}</option>`}).join("");
+  return `<span class="t24"><select data-for="${id}" data-part="h" aria-label="時">${o(24,h)}</select><b>:</b><select data-for="${id}" data-part="m" aria-label="分">${o(60,m)}</select><input type="hidden" id="${id}" value="${v||h+":"+m}" ${attrs||""}></span>`}
+document.addEventListener("change",e=>{const sel=e.target.closest&&e.target.closest("select[data-for]");if(!sel)return;
+  const w=sel.parentElement,hid=w.querySelector("input[type=hidden]");
+  hid.value=w.querySelector('[data-part="h"]').value+":"+w.querySelector('[data-part="m"]').value;
+  hid.dispatchEvent(new Event("change",{bubbles:true}))},true);
+const STEPS=[["規則","哪些日子你通常可以？"],["時段","可以的日子，大概幾點到幾點？"],["微調","最後在月曆上微調"],["完成","填好了！"]];
+const HAND='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 9.5a2 2 0 0 1 4 0V12"/><path d="M17 11a2 2 0 0 1 4 0v4a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.6-2.2L4.3 16.6a2 2 0 0 1 3-2.6L9 15.5"/><path d="M5 3.5 6.5 5M3 7h2M17 3.5 15.5 5"/></svg>';
+
+function stepBody(p,c){
+  const r=p.rules,anyRule=!!(r.weekday||r.offday||r.holiday||r.dow.some(Boolean));
+  if(S.step===1)return `
+    <p class="lead">先用規則一次設定一大片，例如「平日不行、假日可以」。不確定的可以先跳過，之後在月曆上點。</p>
+    ${CATS.slice(0,3).map(([f,t,sub])=>ruleRow(f,t,sub,r[f],false)).join("")}
+    <details class="more" data-dk="r-dow"${r.dow.some(Boolean)?" open":""}><summary>更細：依星期幾設定</summary>${WD.map((w,i)=>ruleRow("dow"+i,"星期"+w,"",r.dow[i],true)).join("")}</details>
+    <p class="hint">越具體的規則越優先：國定假日 &gt; 星期幾 &gt; 平日／假日。例如國定假日不行、假日可以，國定假日還是不行。改規則時，那一類日子在月曆上的單日設定會被取代。${anyRule?' <button class="linkbtn" id="rulesReset">全部規則重置</button>':""}</p>`;
+  if(S.step===2){const allN=catTargets(p,"all").length;
+    const row=(cat,label,sub)=>{const v=(p.catTime&&p.catTime[cat])||p.time,n=catTargets(p,cat).length;
+      let nOk=0,nNo=0,nAll=0;eachDay((k,dow)=>{if(cat!=="all"&&!inCat(cat,k,dow))return;const st=status(p,k,dow);if(cat==="all"&&st!=="ok")return;nAll++;if(st==="ok")nOk++;else if(st==="no")nNo++});
+      const own=cat==="all"?"ok":cat.startsWith("dow")?p.rules.dow[+cat.slice(3)]:p.rules[cat];
+      const rv=cat==="all"?"ok":nAll&&nNo===nAll?"no":(own==="ok"||(nAll&&nOk===nAll))?"ok":"";
+      const inner=`<div class="trow${rv==="ok"?" main":""}"><span class="lbl">${label}${sub?`<small>${sub}</small>`:""}</span><span class="tt">${tIn("ct-from-"+cat,v.from,`data-ct="${cat}" data-f="from" aria-label="${label} 開始"`)}<span>–</span>${tIn("ct-to-"+cat,v.to,`data-ct="${cat}" data-f="to" aria-label="${label} 結束"`)}</span><button class="btn${cat==="all"?" pri":""}" data-apply="${cat}"${n?"":" disabled"}>套用 ${n} 天</button></div>`;
+      return rv==="no"?`<details class="nofold" data-dk="nf-${cat}"><summary><span>${label}</span><small>第 1 步設了「不行」，已收起</small></summary>${inner}</details>`:inner};
+    return `
+    <p class="lead">先幫全部可以的日子填一個時段，再依平日、假日或星期幾分開調整。時間可以精確到分鐘。</p>
+    ${allN?"":`<div class="note">目前還沒有「可以」的日子。下面依平日、假日或星期幾套用時段，會一起把那些日子設成可以（已經是「不行」的不會動）。</div>`}
+    ${row("all","全部可以的日子","共 "+allN+" 天")}
+    <div class="subhead"><span>依規則分開設定</span></div>
+    ${CATS.slice(0,3).map(([f,t,sub])=>row(f,t,sub)).join("")}
+    <details class="more" data-dk="t-dow"><summary>依星期幾設定</summary>${WD.map((w,i)=>row("dow"+i,"星期"+w,"")).join("")}</details>
+    <p class="hint">後面套用的會蓋過前面的。某一天要特別的時間，下一步長按那天就能改。</p>`}
+  if(S.step===3){const modeSw=`<div class="modesw" role="radiogroup" aria-label="點選方式"><button role="radio" data-mode="single" aria-checked="${!S.multi}"><b>單選</b><small>點一下就改那一天</small></button><button role="radio" data-mode="multi" aria-checked="${S.multi}"><b>多選</b><small>先選很多天，再一次改</small></button></div>`;
+    if(S.multi)return `${modeSw}
+    <ul class="tips"><li>點月曆上的日期來<b>選取</b>，再點一次取消選取</li><li>畫面下方的工具列：一次設成可以、不行、未填，或<b>設時段</b></li><li>工具列的「規則」：按名字切換 灰→綠（可以）→紅（不行），按旁邊的時鐘設那一類的時間</li></ul>`;
+    const fk=S.focusDay,fst=fk?status(p,fk,dowOf(fk)):null,ft=fk&&p.dayTimes[fk]||p.brushTime||p.time;
+    return `${modeSw}
+    <p class="lead">${fk?`<b>${fmt(fk)}${HOL[fk]?" "+HOL[fk]:""}</b> 這一天是：`:"點一下月曆上的日期，每點一次依序換成 <b style=\"color:var(--ok)\">可以</b> → <b style=\"color:var(--no)\">不行</b> → 未填。"}</p>
+    <div class="mseg${fk?"":" off"}" role="radiogroup" aria-label="這一天的狀態">${[["ok","可以"],["no","不行"],["na","未填"]].map(([v,t])=>`<button data-fset="${v}" data-v="${v}" role="radio" aria-checked="${fst===v}" aria-pressed="${fst===v}"${fk?"":" disabled"}>${t}</button>`).join("")}</div>
+    ${!fk||fst==="ok"?(()=>{const hasT=fk&&!!p.dayTimes[fk],noT=fk?!hasT:!!p.brushNoTime;
+      return `<div class="trow main tbx${noT?" notime":""}"><span class="lbl">${fk?"這天可以的時段":"點成可以時帶入的時段"}<small>${fk?(hasT?"改這裡就改這一天":"這天先不填時段，取消勾選就能填時間"):(noT?"點成可以時，先不填時段":"點日期變成可以時，會自動帶入這個時間")}</small></span>
+      <label class="nt"><input type="checkbox" id="noTime"${noT?" checked":""}> 不填時段</label>
+      <span class="tt"${noT?" hidden":""}>${tIn("bt-from",ft.from,'data-bt="from" aria-label="時段開始"')}<span>–</span>${tIn("bt-to",ft.to,'data-bt="to" aria-label="時段結束"')}</span></div>`})():""}
+    <ul class="tips">
+      <li><b>點一下</b>：可以 → 不行 → 未填 循環切換，上面的滑鈕會跟著顯示那天的狀態，也可以直接按滑鈕改</li>
+      <li><b>長按</b>（電腦按右鍵）：打開那一天的詳細設定</li>
+    </ul>`}
+  return summaryHTML(p,c);
+}
+
+
+const IC={
+  group:'<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="10" cy="12" r="4.2" fill="#ffd8c9"/><circle cx="22" cy="12" r="4.2" fill="#ffd8c9"/><circle cx="16" cy="10.5" r="5" fill="#fff"/><path d="M3.5 26c.6-5 3.2-7.6 6.5-7.6s5.9 2.6 6.5 7.6z" fill="#ffd8c9"/><path d="M15.5 26c.6-5 3.2-7.6 6.5-7.6s5.9 2.6 6.5 7.6z" fill="#ffd8c9"/><path d="M8.5 27c.8-6.2 3.8-9.4 7.5-9.4s6.7 3.2 7.5 9.4z" fill="#fff"/><circle cx="14.3" cy="10.3" r=".9" fill="#ee6a45"/><circle cx="17.7" cy="10.3" r=".9" fill="#ee6a45"/><path d="M14.6 12.6q1.4 1.1 2.8 0" stroke="#ee6a45" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>',
+  pencil:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="22" rx="7" fill="#dcefe3"/><path d="M11 21.5l1-4 7.6-7.6a1.9 1.9 0 0 1 2.7 2.7L14.7 20.2z" fill="#2f7d5b"/><path d="M11 21.5l3.7-1.3-2.7-2.7z" fill="#f3cfae"/><circle cx="23" cy="22" r="1.6" fill="#ee6a45"/></svg>',
+  lock:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="22" rx="7" fill="#f8edd3"/><path d="M12 15v-2.4a4 4 0 0 1 8 0V15" stroke="#a8741a" stroke-width="2.2" fill="none" stroke-linecap="round"/><rect x="10" y="14.5" width="12" height="9" rx="3" fill="#a8741a"/><circle cx="14" cy="19" r=".9" fill="#fff"/><circle cx="18" cy="19" r=".9" fill="#fff"/><path d="M14.6 20.8q1.4.9 2.8 0" stroke="#fff" stroke-width=".8" fill="none" stroke-linecap="round"/></svg>',
+  reset:'<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="22" rx="7" fill="#f7e2dc"/><path d="M21.5 13.2A6.2 6.2 0 1 0 22 18" stroke="#c4523d" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M22.6 9.6l-.6 4.2-4.1-.9" stroke="#c4523d" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'};
+function ranges(ks){/* 連續日期合併成區間 */const out=[];let st=null,pv=null;const ts=k=>new Date(k+"T00:00:00").getTime();
+  for(const k of ks){if(pv&&ts(k)-ts(pv)===864e5){pv=k;continue}if(st)out.push([st,pv]);st=pv=k}if(st)out.push([st,pv]);
+  const sh=k=>{const[,m,d]=k.split("-").map(Number);return m+"/"+d};
+  return out.map(([a,b])=>a===b?fmt(a):`${sh(a)}–${sh(b)}`)}
+function ruleNames(p,v){const r=p.rules,n=[];if(r.weekday===v)n.push("平日");if(r.offday===v)n.push("假日（週末＋國定假日）");if(r.holiday===v)n.push("國定假日");
+  const ds=r.dow.map((x,i)=>x===v?"週"+WD[i]:null).filter(Boolean);if(ds.length)n.push(ds.join("、"));return n}
+function summaryHTML(p,c){
+  const by={ok:[],no:[],na:[]},extra={ok:[],no:[]},times={};
+  eachDay((k,dow)=>{const st=status(p,k,dow);by[st].push(k);const rl=ruleFor(p,k,dow);if(st!=="na"&&rl!==st)extra[st].push(k);
+    if(st==="ok"&&p.dayTimes[k]){const t=p.dayTimes[k].from+"–"+p.dayTimes[k].to;times[t]=(times[t]||0)+1}});
+  const tlist=Object.entries(times).sort((a,b)=>b[1]-a[1]);
+  const line=(v)=>{const rn=ruleNames(p,v),ex=ranges(extra[v]);
+    if(!by[v].length)return `<span class="none">沒有</span>`;
+    return `${rn.length?`<span class="rr">${rn.join("、")}</span>`:""}${ex.length?`${rn.length?"<span class='plus'>另外還有</span>":""}<span class="dl">${ex.slice(0,12).join("、")}${ex.length>12?` 等 ${extra[v].length} 天`:""}</span>`:""}<em>共 ${by[v].length} 天</em>`};
+  return `
+    <div class="sumcard">
+      <div class="sl s-ok"><span class="tag">可以的日子</span><div>${line("ok")}</div></div>
+      <div class="sl s-tm"><span class="tag">通常時段</span><div>${tlist.length?`<span class="rr">${tlist[0][0]}</span> 可以<em>${tlist[0][1]} 天</em>${tlist.length>1?`<span class="dl">其他時段：${tlist.slice(1,4).map(([t,n])=>`${t}（${n} 天）`).join("、")}</span>`:""}${c.ok?`<span class="warn">還有 ${c.ok} 天可以但沒填時段</span>`:""}`:`<span class="none">還沒填時段</span>`}</div></div>
+      <div class="sl s-no"><span class="tag">不行的日子</span><div>${line("no")}</div></div>
+      ${c.na?`<div class="sl s-na"><span class="tag">還沒決定</span><div><em>${c.na} 天</em><span class="dl">大家會當作你還不確定</span></div></div>`:""}
+    </div>
+    <p class="lead">確定的話就去看大家的結果吧！之後想改，隨時都可以回來再填。</p>
+    <div class="acts">
+      <button class="act main" id="goAll">${IC.group}<span><b>看大家的合併結果</b><small>找出大家都可以的日子</small></span></button>
+      <button class="act" data-step="3">${IC.pencil}<span><b>回去再改改</b><small>回到月曆微調</small></span></button>
+      <button class="act" id="pwBtn">${IC.lock}<span><b>${p.pw?"更改密碼":"設個密碼"}</b><small>${p.pw?"或移除密碼":"別人就不能改你的"}</small></span></button>
+      <button class="act warn" id="resetBtn">${IC.reset}<span><b>全部重來</b><small>清空，變回還沒填</small></span></button>
+    </div>`}
+function renderMe(){
+  const id=S.sel,p=S.people[id],P=PEOPLE.find(x=>x.id===id);
+  const c={filled:0,ok:0,no:0,na:0};eachDay((k,dow)=>c[state(p,k,dow)]++);
+  const selN=S.selDays.size,st=S.step;
+  const prev=st>1?`<button class="btn" data-step="${st-1}">上一步</button>`:"<span></span>";
+  const next=st<4?`<button class="btn pri" data-step="${st+1}">${st===3?"完成":"下一步："+STEPS[st][0]}</button>`:"";
+  return `<div class="wizbar" role="list">${STEPS.map(([t],i)=>`<button role="listitem" class="wz${i+1<st?" done":""}${i+1===st?" cur":""}" data-step="${i+1}"${i+1===st?' aria-current="step"':""}><span class="wn">${i+1<st?"✓":i+1}</span><span class="wt">${t}</span></button>`).join("")}</div>
+  <div class="me">
+  <section class="stepcard">
+    ${adminPass?`<div class="note">管理員模式：你正在幫 ${esc(P.name)} ${p.prefill?"預先填寫，他第一次進來時會看到這些內容，也能自己修改":"修改資料"}。</div>`:""}<div class="whohead"><span class="av" style="background:${P.c}">${faceSVG(P.id)}</span><div><span class="eyebrow">${esc(P.name)}・步驟 ${st} / 4</span><h2>${STEPS[st-1][1]}</h2></div></div>
+    ${stepBody(p,c)}
+    <div class="tbar"><div class="track">${["filled","ok","no","na"].map(x=>c[x]?`<i class="k-${x}" style="flex:${c[x]}"></i>`:"").join("")}</div><div class="keys">${["filled","ok","no","na"].map(x=>`<span><i class="k-${x}"></i>${x==="ok"?"可以・時段未填":STL[x]} <b>${c[x]}</b></span>`).join("")}</div></div>
+    <div class="wiznav${S.multi?" hide":""}">${prev}${next}</div>
+  </section>
+  <section class="calhead">
+    <div class="tapcall${st===3?" live":""}">${HAND}<div style="min-width:0">${S.multi?`<b>多選中：點日期，或用下方按鈕整類選取</b><small>選好後用下方工具列一次設定</small>`:st===3?`<b>直接點月曆上的日期</b><small>點一下：可以 → 不行 → 未填・長按打開那天的設定</small>`:`<b>即時預覽</b><small>你的設定會即時顯示在這裡，也可以直接點日期</small>`}</div></div>
+    <div class="legend"><span><i class="sw" style="background:var(--ok)"></i>已填（有時段）</span><span><i class="sw" style="background:var(--ok-bg);border:1.5px dashed var(--ok)"></i>可以・時段未填</span><span><i class="sw" style="background:var(--no-bg)"></i>不行</span><span><i class="sw" style="background:var(--surface);border:1.5px solid var(--line)"></i>未填</span><span style="color:var(--hol)">紅字＝國定假日</span></div>
+    ${monthsHTML((k,d,dow)=>{const s2=state(p,k,dow),t=p.dayTimes[k],pk=S.selDays.has(k)?" pick":(!S.multi&&S.focusDay===k?" focus":"");
+      const lb=s2==="filled"?tl(t.from,t.to):lab(k);
+      return `<button class="${baseCls(k,dow)} st-${s2}${pk}" data-k="${k}" aria-label="${fmt(k)} ${STL[s2]}${t?` ${t.from} 到 ${t.to}`:""}"><span class="n">${d}</span>${lb}</button>`})}
+  </section>
+  </div>
+  ${S.multi?`<div class="bulk" role="toolbar" aria-label="批量設定"><div class="brow"><span class="bn">已選 <b>${selN}</b> 天</span>
+    <button data-bulk="ok"${selN?"":" disabled"}>可以</button><button data-bulk="no"${selN?"":" disabled"}>不行</button><button data-bulk="na"${selN?"":" disabled"}>未填</button><button data-bulk="time" class="b-pri"${selN?"":" disabled"}>設時段</button></div>
+    <div class="brow sel"><span class="bl">規則</span>${["weekday","offday","holiday"].concat(WD.map((w,i)=>"dow"+i)).map(cat=>{const rv=cat.startsWith("dow")?p.rules.dow[+cat.slice(3)]:p.rules[cat],nm=cat.startsWith("dow")?"週"+WD[+cat.slice(3)]:catLabel(cat),ct=p.catTime&&p.catTime[cat];
+      return `<span class="rchip${rv?" r-"+rv:""}"><button data-cyc="${cat}" aria-label="${nm} 規則：${rv?STL[rv]:"沒設定"}，按一下切換">${nm}</button><button class="clk" data-clk="${cat}" aria-label="${nm} 設時間" title="${rv==="ok"?(ct?ct.from+"–"+ct.to:"設時間"):"先把規則設成可以（綠色）才能設時間"}"${rv==="ok"?"":" disabled"}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button></span>`}).join("")}</div>
+    <div class="brow"><button data-selcat="all">選所有可以的</button>${selN?'<button data-bulk="none">清空選取</button>':""}<span class="bl" style="margin-left:auto">規則：按名字切換 灰→綠（可以）→紅（不行），按時鐘設時間</span></div></div>`:""}`;
+}
+
+function overlap(){return null}
+
+function renderAll(){
+  const filled=PEOPLE.filter(p=>S.people[p.id]);
+  const avs=(p)=>`<span class="av" style="background:${p.c}">${faceSVG(p.id)}</span>`;
+  if(!filled.length&&S.ready)return `<section class="guide"><span class="eyebrow">開始之前</span><h2>三步驟找出大家的空檔</h2>
+    <ol class="gsteps"><li><span class="num">1</span><div><b>點自己的名字</b><small>第一次可以順便設密碼</small></div></li>
+    <li><span class="num">2</span><div><b>直接點月曆標日期</b><small>也能一次設定平日、假日、星期幾</small></div></li>
+    <li><span class="num">3</span><div><b>回到合併結果</b><small>大家都可以的日子會變深綠色</small></div></li></ol>
+    <div class="startrow">${PEOPLE.map(p=>`<button class="btn" data-start="${p.id}">${avs(p)}我是 ${esc(p.name)}</button>`).join("")}</div></section>`;
+  const all=[],most=[];
+  eachDay((k,dow)=>{const sts=PEOPLE.map(p=>status(S.people[p.id],k,dow));const ok=sts.filter(x=>x==="ok").length;
+    if(ok===PEOPLE.length)all.push(k);else if(ok===filled.length)most.push(k)});
+  const good=filled.length===PEOPLE.length?all:most;
+  const ov=good.length?dayOverlap(good[0],dowOf(good[0])):null;
+  let detail="";
+  if(S.picked){const[y,m,d]=S.picked.split("-").map(Number);const dow=new Date(y,m-1,d).getDay();
+    detail=`<section class="card"><h2>${fmt(S.picked)}${HOL[S.picked]?`・${HOL[S.picked]}`:FEST[S.picked]?`・${FEST[S.picked]}`:""}</h2><div class="who">`+PEOPLE.map(p=>{const q=S.people[p.id],st=status(q,S.picked,dow);
+      return `<div><span class="av" style="background:${p.c};width:26px;height:26px;font-size:12px">${faceSVG(p.id)}</span>${esc(p.name)}<span class="st ${st}">${st==="ok"?(timeFor(q,S.picked)?timeFor(q,S.picked).from+"–"+timeFor(q,S.picked).to:"可以・時段未填"):st==="no"?"不行":"未填"}</span></div>`}).join("")+`</div>${(()=>{const o=dayOverlap(S.picked,dow);return o?`<p class="hint">可以的人共同時段：${o.ok?o.from+"–"+o.to:"沒有重疊"}</p>`:""})()}</section>`}
+  const label=filled.length===PEOPLE.length?"所有人都可以":"目前填好的人都可以";
+  return `<div class="panel">
+  <section class="hero">
+    <span class="k">${good.length?"最快可以約":"還沒有共同空檔"}</span>
+    <span class="big">${good.length?fmt(good[0])+(HOL[good[0]]?" "+HOL[good[0]]:""):"再調整一下規則看看"}</span>
+    <span class="sub">${label}的日子共 ${good.length} 天${ov?(ov.ok?`・這天共同時段 ${ov.from}–${ov.to}`:"・這天時段沒有重疊"):good.length?"・時段還沒填齊":""}</span>
+    ${good.length>1?`<div class="chips">${good.slice(1,13).map(k=>`<button class="chip" data-k="${k}">${fmt(k)}${HOL[k]?" "+HOL[k]:""}</button>`).join("")}${good.length>13?`<span class="sub">＋${good.length-13} 天</span>`:""}</div>`:""}
+    <div class="roster">${PEOPLE.map(p=>`<span class="${S.people[p.id]?"":"off"}">${avs(p)}${esc(p.name)} ${S.people[p.id]?"✓":"未填"}</span>`).join("")}</div>
+  </section>
+  ${detail}
+  <div class="legend"><span><i class="sw" style="background:var(--ok)"></i>所有人都可以</span><span><i class="sw" style="background:var(--ok-bg)"></i>已填的人都可以</span><span><i class="dot ok" style="display:inline-block"></i>可以</span><span><i class="dot no" style="display:inline-block"></i>不行</span><span><i class="dot" style="display:inline-block"></i>未填</span>・點日期看每個人狀況</div>
+  ${monthsHTML((k,d,dow)=>{const sts=PEOPLE.map(p=>status(S.people[p.id],k,dow));const okN=sts.filter(s=>s==="ok").length;
+    const cls=filled.length===PEOPLE.length&&okN===PEOPLE.length?" all4":(filled.length&&okN===filled.length?" most":"");
+    const o=okN&&okN===filled.length?dayOverlap(k,dow):null,lb=o&&o.ok&&o.n===okN?`<span class="lb tm1">${hh(o.from)}–${hh(o.to)}</span>`:lab(k);
+    return `<button class="${baseCls(k,dow)}${cls}${S.picked===k?" sel":""}" data-k="${k}" aria-label="${fmt(k)} ${okN} 人可以"><span class="n">${d}</span>${lb}<span class="dots">${sts.map(s=>`<i class="dot ${s==="na"?"":s}"></i>`).join("")}</span></button>`})}
+  </div>`;
+}
+
+let lastView="";
+function saveUI(){if(S.view!=="me"||!S.sel)return;try{localStorage.setItem("tc4ui:"+S.sel,JSON.stringify({step:S.step}))}catch(e){}}
+function render(){saveUI();
+  const vkey=S.view+":"+S.sel,same=vkey===lastView;lastView=vkey;
+  const y=window.scrollY,su=document.querySelector(".stepcard"),st=su?su.scrollTop:0,pl=document.getElementById("people").scrollLeft;
+  renderPeople();document.getElementById("people").scrollLeft=pl;
+  const main=document.getElementById("main");
+  if(!S.ready){main.innerHTML=`<div class="empty">正在載入大家的日曆…</div>`;return}
+  main.style.minHeight=main.offsetHeight+"px";
+  if(same)main.querySelectorAll("details[data-dk]").forEach(d=>{S.det[d.dataset.dk]=d.open});else S.det={};
+  main.innerHTML=(S.view==="me"&&S.sel&&S.people[S.sel])?renderMe():renderAll();
+  main.querySelectorAll("details[data-dk]").forEach(d=>{const v=S.det[d.dataset.dk];if(v!==undefined)d.open=v});
+  main.style.minHeight="";
+  const dock=document.querySelector(".bulk")||[...document.querySelectorAll(".wiznav:not(.hide)")].find(x=>getComputedStyle(x).position==="fixed");
+  document.body.style.paddingBottom=dock?dock.offsetHeight+"px":"";
+  if(same){window.scrollTo(0,y);const s2=document.querySelector(".stepcard");if(s2)s2.scrollTop=st}
+  else{S.multi=false;S.selDays.clear();S.focusDay=null;window.scrollTo(0,0)}
+}
+
+/* ---------- modal ---------- */
+function modal(html,bind){const m=document.getElementById("modal");m.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><button class="mx" aria-label="關閉" title="關閉"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>${html}</div>`;m.querySelector(".mx").onclick=closeModal;m.hidden=false;bind(m);const i=m.querySelector("input");if(i)i.focus()}
+document.addEventListener("toggle",e=>{const d=e.target;if(d&&d.dataset&&d.dataset.dk)S.det[d.dataset.dk]=d.open},true);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("modal").hidden)closeModal()});
+function closeModal(){const m=document.getElementById("modal");m.hidden=true;m.innerHTML=""}
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")closeModal()});
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2200)}
+
+function openPerson(id){
+  const P=PEOPLE.find(p=>p.id===id),d=S.people[id];
+  if(adminPass){/* 管理員代填：不用密碼，也不算本人第一次進入 */
+    if(!d){const b=blank();b.prefill=true;S.people[id]=b;persist(id)}
+    S.view="me";S.sel=id;S.step=startStep(id);render();toast(`管理員模式：幫 ${P.name} 預先填寫`);return}
+  if(!d||d.prefill){
+    const pre=!!d;
+    modal(`<h2>第一次進入：${esc(P.name)}</h2>${pre?`<div class="note">管理員已經幫你預先填了一些日子和時段，進去後都可以自己修改。</div>`:""}<p class="hint">可以設一組密碼，之後要輸入才能修改你的日曆。不設也可以，直接進入。</p>
+      <input id="pw1" type="password" placeholder="密碼（選填）" autocomplete="new-password"><p class="err" id="e"></p>
+      <div class="row"><button class="btn" id="skip">不設密碼，直接進入</button><button class="btn pri" id="ok">設定並進入</button></div>`,m=>{
+      const go=async(withPw)=>{const v=m.querySelector("#pw1").value;if(withPw&&!v){m.querySelector("#e").textContent="請輸入密碼，或按「不設密碼」";return}
+        const b=S.people[id]||blank();delete b.prefill;b.pw=withPw?await hash(v):null;S.people[id]=b;unlocked.add(id);saveUnlocked();persist(id);closeModal();
+        S.view="me";S.sel=id;S.step=pre?4:1;render();if(pre)toast("這是管理員幫你預填的內容，可以直接修改")};
+      m.querySelector("#skip").onclick=()=>go(false);m.querySelector("#ok").onclick=()=>go(true);
+      m.querySelector("#pw1").onkeydown=e=>{if(e.key==="Enter")go(true)}});
+    return}
+  if(d.pw&&!unlocked.has(id)){
+    modal(`<h2>${LOCK.replace('<svg','<svg style="width:18px;height:18px;vertical-align:-2px"')} ${esc(P.name)}</h2><p class="hint">這份日曆有上鎖，請輸入密碼。</p>
+      <input id="pw" type="password" placeholder="密碼" autocomplete="current-password"><p class="err" id="e"></p>
+      <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">進入</button></div>`,m=>{
+      const go=async()=>{if(await hash(m.querySelector("#pw").value)===S.people[id].pw){unlocked.add(id);saveUnlocked();closeModal();S.view="me";S.sel=id;S.step=startStep(id);render()}else m.querySelector("#e").textContent="密碼不對，再試一次"};
+      m.querySelector("#c").onclick=closeModal;m.querySelector("#ok").onclick=go;m.querySelector("#pw").onkeydown=e=>{if(e.key==="Enter")go()}});
+    return}
+  S.view="me";S.sel=id;S.step=startStep(id);render();
+}
+function pwDialog(){const id=S.sel,p=S.people[id];
+  modal(`<h2>${p.pw?"更改密碼":"設定密碼"}</h2><input id="pw" type="password" placeholder="新密碼" autocomplete="new-password"><p class="err" id="e"></p>
+    <div class="row">${p.pw?'<button class="btn" id="rm">移除密碼</button>':""}<button class="btn" id="c">取消</button><button class="btn pri" id="ok">儲存</button></div>`,m=>{
+    m.querySelector("#c").onclick=closeModal;
+    if(p.pw)m.querySelector("#rm").onclick=()=>{p.pw=null;persist(id);closeModal();render();toast("已移除密碼")};
+    const go=async()=>{const v=m.querySelector("#pw").value;if(!v){m.querySelector("#e").textContent="請輸入新密碼";return}p.pw=await hash(v);persist(id);closeModal();render();toast("密碼已儲存")};
+    m.querySelector("#ok").onclick=go;m.querySelector("#pw").onkeydown=e=>{if(e.key==="Enter")go()}})}
+
+function resetDialog(){const id=S.sel,P=PEOPLE.find(x=>x.id===id);
+  modal(`<div class="bigic">${IC.reset}</div><h2>確定要重置 ${esc(P.name)} 嗎？</h2><p class="hint">你填的可以／不行、時段和密碼都會刪掉，變回「還沒填」。這個動作沒辦法復原。</p>
+    <div class="row"><button class="btn" id="c">先不要</button><button class="btn pri" id="ok" style="background:var(--no);box-shadow:none;color:#fff">確定重置</button></div>`,m=>{
+    m.querySelector("#c").onclick=closeModal;
+    m.querySelector("#ok").onclick=async()=>{clearTimeout(timers[id]);timers[id]=null;pending[id]=true;
+      delete S.people[id];unlocked.delete(id);saveUnlocked();closeModal();S.view="all";S.sel=null;render();
+      try{if(S.api){const r=await (chains[id]||Promise.resolve()).then(()=>fetch("/api/people/"+id,{method:"DELETE"}));if(!r.ok)throw 0}else if(S.local){try{localStorage.removeItem("tc4:"+id)}catch(e){}}else await (chains[id]||Promise.resolve()).then(()=>S.db.collection("people").doc(id).delete());toast(`${P.name} 已重置為還沒填`)}
+      catch(e){toast("重置失敗，請稍後再試")}finally{pending[id]=false}}})}
+
+function timeSel(id,v){return tIn(id,v)}
+function dayDialog(k){const id=S.sel,p=S.people[id];if(!p)return;
+  const dow=dowOf(k),rule=ruleFor(p,k,dow)||"na";
+  let st=status(p,k,dow);const t0=p.dayTimes[k];
+  modal(`<h2>${fmt(k)}${HOL[k]?"・"+HOL[k]:FEST[k]?"・"+FEST[k]:""}</h2>
+    <p class="hint">這一天：</p>
+    <div class="mseg" role="radiogroup" aria-label="這天的狀態"><button data-v="ok">可以</button><button data-v="no">不行</button><button data-v="na">未填</button></div>
+    <div id="tbox"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><p class="hint">可以的時間：</p><label class="nt" style="display:flex;gap:6px;align-items:center;font-size:13px;font-weight:700;color:var(--ok)"><input type="checkbox" id="dnt"${st==="ok"&&!t0?" checked":""} style="width:18px;height:18px;accent-color:var(--ok)"> 不填時段</label></div>
+    <div class="times" id="dtimes"><span>從</span>${tIn("d-from",(t0&&t0.from)||p.time.from)}<span>到</span>${tIn("d-to",(t0&&t0.to)||p.time.to)}</div></div>
+    <p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">儲存</button></div>`,mm=>{
+    const box=mm.querySelector("#tbox");
+    const dnt=mm.querySelector("#dnt"),dt=mm.querySelector("#dtimes");
+    const paint=()=>{mm.querySelectorAll(".mseg button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.v===st)));box.hidden=st!=="ok";dt.hidden=dnt.checked};paint();
+    dnt.onchange=paint;
+    mm.querySelectorAll(".mseg button").forEach(x=>x.onclick=()=>{st=x.dataset.v;paint()});
+    mm.querySelector("#c").onclick=closeModal;
+    mm.querySelector("#ok").onclick=()=>{
+      if(st==="ok"&&dnt.checked){stashTime(p,k)}
+      else if(st==="ok"){const f=mm.querySelector("#d-from").value,to=mm.querySelector("#d-to").value;
+        if(!f||!to||f>=to){mm.querySelector("#e").textContent="結束時間要晚於開始時間";return}
+        p.dayTimes[k]={from:f,to}}
+      if(st!=="ok")stashTime(p,k);
+      if(st===rule)delete p.dates[k];else p.dates[k]=st;
+      S.focusDay=k;persist(id);closeModal();render();toast(`${fmt(k)}：${st==="ok"?(p.dayTimes[k]?"可以 "+p.dayTimes[k].from+"–"+p.dayTimes[k].to:"可以・時段未填"):STL[st]}`)}})}
+function stashTime(p,k){if(p.dayTimes[k]){p.memTimes=p.memTimes||{};p.memTimes[k]=p.dayTimes[k];delete p.dayTimes[k]}}
+function restoreTime(p,k,fallback){if(p.dayTimes[k])return;const m=p.memTimes&&p.memTimes[k];const t=m||fallback;if(t)p.dayTimes[k]={from:t.from,to:t.to};if(m)delete p.memTimes[k]}
+function setDay(p,k,v){const rule=ruleFor(p,k,dowOf(k))||"na";
+  if(v==="ok"){if(!p.brushNoTime)restoreTime(p,k,p.brushTime||p.time)}else stashTime(p,k);
+  if(v===rule)delete p.dates[k];else p.dates[k]=v}
+function setRule(p,f,v){if(f.startsWith("dow"))p.rules.dow[+f.slice(3)]=v;else p.rules[f]=v;
+  p.ruleTs=p.ruleTs||{};if(v)p.ruleTs[f]=Date.now();else delete p.ruleTs[f];
+  let n=0,cleared=0;eachDay((k,dow)=>{if(!inCat(f,k,dow))return;n++;if(p.dates[k]){delete p.dates[k];cleared++}const st=status(p,k,dow);if(st==="ok")restoreTime(p,k,p.catTime&&p.catTime[f]);else stashTime(p,k)});
+  persist(S.sel);render();
+  let got=0;eachDay((k,dow)=>{if(inCat(f,k,dow)&&status(p,k,dow)===v)got++});
+  toast(v?`${catLabel(f)}：${got} 天設成「${STL[v]}」${got<n?`（另外 ${n-got} 天有更具體的規則）`:""}`:`${catLabel(f)} 的規則已取消`)}
+function applyCatTime(p,cat,f,to){if(!f||!to||f>=to){toast("結束時間要晚於開始時間");return false}
+  p.catTime=p.catTime||{};p.catTime[cat]={from:f,to};if(cat==="all")p.time={from:f,to};
+  const ks=catTargets(p,cat);ks.forEach(k=>{if(status(p,k,dowOf(k))!=="ok")p.dates[k]="ok";p.dayTimes[k]={from:f,to}});
+  persist(S.sel);render();toast(`${catLabel(cat)}：${ks.length} 天設成 ${f}–${to}`);return true}
+function catTimeDialog(cat){const p=S.people[S.sel],v=(p.catTime&&p.catTime[cat])||p.time,n=catTargets(p,cat).length;
+  modal(`<h2>${catLabel(cat)}的時間</h2><p class="hint">套用到 ${n} 天${cat.startsWith("dow")||cat!=="all"?"（已經是「不行」的不會動，其他會設成可以）":""}。</p>
+    <div class="times"><span>從</span>${tIn("c-from",v.from)}<span>到</span>${tIn("c-to",v.to)}</div><p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok"${n?"":" disabled"}>套用 ${n} 天</button></div>`,mm=>{
+    mm.querySelector("#c").onclick=closeModal;
+    mm.querySelector("#ok").onclick=()=>{const f=mm.querySelector("#c-from").value,to=mm.querySelector("#c-to").value;
+      if(!f||!to||f>=to){mm.querySelector("#e").textContent="結束時間要晚於開始時間";return}closeModal();applyCatTime(p,cat,f,to)}})}
+function bulkTimeDialog(){const id=S.sel,p=S.people[id],n=S.selDays.size;
+  modal(`<h2>幫 ${n} 天設時段</h2><p class="hint">選取的日子會設成「可以」，並填入這個時間。</p>
+    <div class="times"><span>從</span>${timeSel("b-from",p.time.from)}<span>到</span>${timeSel("b-to",p.time.to)}</div><p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">套用</button></div>`,mm=>{
+    mm.querySelector("#c").onclick=closeModal;
+    mm.querySelector("#ok").onclick=()=>{const f=mm.querySelector("#b-from").value,to=mm.querySelector("#b-to").value;
+      if(f>=to){mm.querySelector("#e").textContent="結束時間要晚於開始時間";return}
+      for(const k of S.selDays){if(status(p,k,dowOf(k))!=="ok")p.dates[k]="ok";p.dayTimes[k]={from:f,to}}
+      S.selDays.clear();persist(id);closeModal();render();toast(`已幫 ${n} 天設好時段`)}})}
+let lp=null,suppress=false;
+const mainEl=document.getElementById("main");
+function endPress(){if(lp){clearTimeout(lp.t);lp.el.classList.remove("pressing");lp=null}}
+mainEl.addEventListener("pointerdown",e=>{if(S.view!=="me"||S.multi||e.button>0)return;const d=e.target.closest(".day");if(!d)return;endPress();suppress=false;
+  d.classList.add("pressing");lp={x:e.clientX,y:e.clientY,el:d,t:setTimeout(()=>{const k=d.dataset.k;endPress();suppress=true;if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){}dayDialog(k)},550)}});
+mainEl.addEventListener("pointermove",e=>{if(lp&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10)endPress()});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>mainEl.addEventListener(ev,endPress));
+mainEl.addEventListener("contextmenu",e=>{const d=e.target.closest(".day");if(!d||S.view!=="me")return;e.preventDefault();if(S.multi)return;
+  if(suppress||document.getElementById("modal").hidden===false)return;endPress();suppress=e.pointerType==="touch";dayDialog(d.dataset.k)});
+
+/* ---------- events ---------- */
+document.getElementById("people").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(!b||!S.ready)return;
+  if(b.dataset.p==="__all"){S.view="all";render();window.scrollTo(0,0)}else openPerson(b.dataset.p)});
+document.addEventListener("click",e=>{
+  const t=e.target;if(!t.closest("#main"))return;
+  if(S.view==="me"){const id=S.sel,p=S.people[id];if(!p)return;
+    const day=t.closest(".day");if(day){if(suppress){suppress=false;return}const k=day.dataset.k;
+      if(S.multi){S.selDays.has(k)?S.selDays.delete(k):S.selDays.add(k);render();return}
+      const cur=status(p,k,dowOf(k));setDay(p,k,cur==="ok"?"no":cur==="no"?"na":"ok");S.focusDay=k;
+      persist(id);render();return}
+    const fs=t.closest("[data-fset]");if(fs){if(S.focusDay){setDay(p,S.focusDay,fs.dataset.fset);persist(id);render()}return}
+    const rb=t.closest("[data-rule]");if(rb){setRule(p,rb.dataset.rule,rb.dataset.v==="clr"?"":rb.dataset.v);return}
+    const cy=t.closest("[data-cyc]");if(cy){const f=cy.dataset.cyc,cur=f.startsWith("dow")?p.rules.dow[+f.slice(3)]:p.rules[f];setRule(p,f,cur===""||!cur?"ok":cur==="ok"?"no":"");return}
+    const ck=t.closest("[data-clk]");if(ck)return catTimeDialog(ck.dataset.clk);
+    const bk=t.closest("[data-bulk]");if(bk){const a=bk.dataset.bulk;
+      if(a==="time")return bulkTimeDialog();
+      if(a==="none"){S.selDays.clear();render();return}
+      const n=S.selDays.size;for(const k of S.selDays){p.dates[k]=a;if(a!=="ok")stashTime(p,k);else restoreTime(p,k,null)}S.selDays.clear();persist(id);render();toast(`已把 ${n} 天設成「${STL[a]}」`);return}
+    const sc=t.closest("[data-selcat]");if(sc){const cat=sc.dataset.selcat,ks=[];eachDay((k,dow)=>{if(cat==="all"?status(p,k,dow)==="ok":inCat(cat,k,dow))ks.push(k)});
+      const allIn=ks.length&&ks.every(k=>S.selDays.has(k));ks.forEach(k=>allIn?S.selDays.delete(k):S.selDays.add(k));render();return}
+    const sp=t.closest("[data-step]");if(sp){S.step=+sp.dataset.step;if(S.step!==3){S.multi=false;S.selDays.clear()}render();
+      const sc2=document.querySelector(".stepcard");if(sc2&&sc2.getBoundingClientRect().top<0)sc2.scrollIntoView({block:"start"});return}
+    const ap=t.closest("[data-apply]");if(ap){const cat=ap.dataset.apply;applyCatTime(p,cat,document.getElementById("ct-from-"+cat).value,document.getElementById("ct-to-"+cat).value);return}
+    const b=t.closest("button");if(!b)return;
+    if(b.id==="goAll"){S.view="all";render();return}
+    if(b.id==="multiBtn"){S.multi=!S.multi;S.selDays.clear();render();return}
+    if(b.dataset.mode){const m=b.dataset.mode==="multi";if(m!==S.multi){S.multi=m;S.selDays.clear();render()}return}
+    if(b.id==="fillEmpty"||b.id==="fillAll"){if(p.time.from>=p.time.to){toast("結束時間要晚於開始時間");return}let n=0;
+      eachDay((k,dow)=>{if(status(p,k,dow)==="ok"&&(b.id==="fillAll"||!p.dayTimes[k])){p.dayTimes[k]={...p.time};n++}});
+      persist(id);render();toast(`已填入 ${n} 天的時段`);return}
+    if(b.id==="rulesReset"){p.rules=blankRules();p.ruleTs={};persist(id);render();toast("規則已全部重置");return}
+    if(b.id==="resetBtn")return resetDialog();
+    if(b.id==="pwBtn")return pwDialog();
+    if(b.id==="clearBtn"){p.dates={};p.dayTimes={};persist(id);render();toast("已清除");return}
+  }else{const sb=t.closest("[data-start]");if(sb)return openPerson(sb.dataset.start);
+    const c=t.closest("[data-k]");if(c){S.picked=S.picked===c.dataset.k?null:c.dataset.k;render()}}
+});
+document.getElementById("main").addEventListener("change",e=>{const p=S.people[S.sel];if(!p||S.view!=="me")return;const ct=e.target.dataset&&e.target.dataset.ct;
+  if(e.target.id==="noTime"){const on=e.target.checked,fk=S.focusDay;
+    if(fk&&status(p,fk,dowOf(fk))==="ok"){if(on)stashTime(p,fk);else restoreTime(p,fk,p.brushTime||p.time)}
+    else p.brushNoTime=on;
+    if(fk)p.brushNoTime=on;persist(S.sel);render();return}
+  const bt=e.target.dataset&&e.target.dataset.bt;
+  if(bt&&e.target.value){const fk=S.focusDay,base=(fk&&p.dayTimes[fk])||p.brushTime||p.time,nt=Object.assign({},base,{[bt]:e.target.value});
+    if(nt.from>=nt.to){toast("結束時間要晚於開始時間");return}
+    p.brushTime=nt;if(fk&&status(p,fk,dowOf(fk))==="ok")p.dayTimes[fk]={from:nt.from,to:nt.to};persist(S.sel);render();return}
+  if(ct&&e.target.value){p.catTime=p.catTime||{};p.catTime[ct]=Object.assign({},p.catTime[ct]||p.time,{[e.target.dataset.f]:e.target.value});persist(S.sel)}});
+
+
+/* ---------- 成員名單與管理員 ---------- */
+const COLORS=["#1f8a86","#3b66b0","#7d4fb0","#c7742a","#c4523d","#2f7d5b","#b0477f","#6b7a2f","#4a5a8a","#a0622d"];
+const DEFAULT_ROSTER=PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c}));
+function applyRoster(list){if(!Array.isArray(list)||!list.length)return;PEOPLE=list.map(x=>({id:String(x.id),name:String(x.name||"").slice(0,20)||"成員",c:x.c||COLORS[0]}));
+  if(S.sel&&!PEOPLE.some(p=>p.id===S.sel)){S.view="all";S.sel=null}}
+let adminPass=null;try{adminPass=sessionStorage.getItem("tc4admin")}catch(e){}
+async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+const LOCAL_ADMIN_HASH="9cc0a05dc5ce81095fe874ba93e784c363f0e480e55eba211ed892848e8fcef5";
+async function checkAdmin(pw){if(S.api){const r=await fetch("/api/admin/check",{method:"POST",headers:{"x-admin-pass":pw}});return r.ok}
+  return (await sha("tc4admin:"+pw))===LOCAL_ADMIN_HASH}
+async function saveRoster(list){
+  if(S.api){const r=await fetch("/api/roster",{method:"PUT",headers:{"content-type":"application/json","x-admin-pass":adminPass||""},body:JSON.stringify(list)});if(!r.ok)throw new Error("roster "+r.status)}
+  else if(S.db){await S.db.collection("meta").doc("roster").set({list})}
+  else{try{localStorage.setItem("tc4roster",JSON.stringify(list))}catch(e){}}
+  applyRoster(list);render()}
+async function removePerson(id){
+  if(S.api){const r=await fetch("/api/people/"+id,{method:"DELETE",headers:{"x-admin-pass":adminPass||""}});if(!r.ok)throw 0}
+  else if(S.db){await S.db.collection("people").doc(id).delete()}
+  else{try{localStorage.removeItem("tc4:"+id)}catch(e){}}
+  delete S.people[id]}
+function renderAdminBtn(){const b=document.getElementById("adminBtn");b.classList.toggle("on",!!adminPass);b.querySelector("span").textContent=adminPass?"管理中":"管理"}
+function adminLogin(){
+  modal(`<div class="bigic">${IC.lock}</div><h2>管理員登入</h2><p class="hint">登入後可以新增或刪除成員。</p>
+    <input id="apw" type="password" inputmode="numeric" placeholder="管理員密碼" autocomplete="current-password"><p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">登入</button></div>`,m=>{
+    m.querySelector("#c").onclick=closeModal;
+    const go=async()=>{const v=m.querySelector("#apw").value;if(!v)return;
+      let ok=false;try{ok=await checkAdmin(v)}catch(e){}
+      if(!ok){m.querySelector("#e").textContent="密碼不對";return}
+      adminPass=v;try{sessionStorage.setItem("tc4admin",v)}catch(e){}renderAdminBtn();adminPanel()};
+    m.querySelector("#ok").onclick=go;m.querySelector("#apw").onkeydown=e=>{if(e.key==="Enter")go()}})}
+function adminPanel(){let color=COLORS.find(c=>!PEOPLE.some(p=>p.c===c))||COLORS[PEOPLE.length%COLORS.length];
+  modal(`<h2>管理成員</h2><p class="hint">目前 ${PEOPLE.length} 人。刪除成員會一起刪掉他填的資料。</p>
+    <div class="alist">${PEOPLE.map(p=>`<div class="arow"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><b>${esc(p.name)}</b><small>${!S.people[p.id]?"還沒填":S.people[p.id].prefill?"管理員預填":"已填寫"}</small><button class="del" data-fillfor="${p.id}" style="background:var(--ok-bg);color:var(--ok)">代填</button><button class="del" data-del="${p.id}"${PEOPLE.length<=1?" disabled":""}>刪除</button></div>`).join("")}</div>
+    <p class="hint" style="margin-top:4px"><b>新增成員</b></p>
+    <div class="addrow"><input id="nn" maxlength="20" placeholder="名字，例如：小明"><button class="btn pri" id="add">新增</button></div>
+    <div class="swatches" role="radiogroup" aria-label="顏色">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" aria-label="顏色 ${c}" aria-pressed="${c===color}"></button>`).join("")}</div>
+    <p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="logout">登出管理員</button><button class="btn pri" id="done">完成</button></div>`,m=>{
+    m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{color=b.dataset.c;m.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.c===color)))});
+    m.querySelector("#done").onclick=closeModal;
+    m.querySelectorAll("[data-fillfor]").forEach(b=>b.onclick=()=>{closeModal();openPerson(b.dataset.fillfor)});
+    m.querySelector("#logout").onclick=()=>{adminPass=null;if(S.view==="me"&&S.sel&&(S.people[S.sel]?.pw&&!unlocked.has(S.sel)||S.people[S.sel]?.prefill)){S.view="all";S.sel=null;render()}try{sessionStorage.removeItem("tc4admin")}catch(e){}renderAdminBtn();closeModal();toast("已登出管理員")};
+    const add=async()=>{const n=m.querySelector("#nn").value.trim();if(!n){m.querySelector("#e").textContent="請輸入名字";return}
+      if(PEOPLE.some(p=>p.name===n)){m.querySelector("#e").textContent="已經有這個名字了";return}
+      if(PEOPLE.length>=20){m.querySelector("#e").textContent="最多 20 人";return}
+      const id="p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      try{await saveRoster(PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c})).concat([{id,name:n,c:color}]));toast(`已新增 ${n}`);adminPanel()}
+      catch(e){m.querySelector("#e").textContent="新增失敗，請重新登入管理員再試"}};
+    m.querySelector("#add").onclick=add;m.querySelector("#nn").onkeydown=e=>{if(e.key==="Enter")add()};
+    m.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const P=PEOPLE.find(x=>x.id===b.dataset.del);
+      modal(`<div class="bigic">${IC.reset}</div><h2>確定刪除 ${esc(P.name)}？</h2><p class="hint">會把 ${esc(P.name)} 從名單移除，他填的日期、時段和密碼也會一起刪掉，沒辦法復原。</p>
+        <div class="row"><button class="btn" id="c">先不要</button><button class="btn pri" id="ok" style="background:var(--no);box-shadow:none;color:#fff">確定刪除</button></div>`,mm=>{
+        mm.querySelector("#c").onclick=adminPanel;
+        mm.querySelector("#ok").onclick=async()=>{try{await removePerson(P.id);await saveRoster(PEOPLE.filter(x=>x.id!==P.id).map(p=>({id:p.id,name:p.name,c:p.c})));toast(`已刪除 ${P.name}`);adminPanel()}
+          catch(e){mm.querySelector(".hint").textContent="刪除失敗，請重新登入管理員再試"}}})})})}
+document.getElementById("adminBtn").addEventListener("click",()=>adminPass?adminPanel():adminLogin());
+renderAdminBtn();
+
+/* ---------- boot ---------- */
+render();
+/* 放在 Cloudflare 上時：資料存在 D1，透過 /api/people 讀寫，每幾秒同步一次 */
+let lastRemote="";
+async function pullApi(){
+  const r=await fetch("/api/people",{cache:"no-store"});if(!r.ok)throw new Error("api "+r.status);
+  const all=await r.json();try{const rr=await fetch("/api/roster",{cache:"no-store"});if(rr.ok){const rl=await rr.json();if(JSON.stringify(rl)!==JSON.stringify(PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c})))){applyRoster(rl);lastRemote=""}}}catch(e){}
+  const txt=JSON.stringify(all);
+  if(txt===lastRemote&&S.ready)return;lastRemote=txt;
+  const beforeJ=JSON.stringify(S.people);
+  for(const id of Object.keys(S.people))if(!all[id]&&!pending[id])delete S.people[id];
+  for(const [id,v] of Object.entries(all))if(!pending[id])S.people[id]=norm(v);
+  if(S.ready&&JSON.stringify(S.people)===beforeJ)return;
+  const a=document.activeElement;if(S.ready&&a&&a.closest&&a.closest("#main, #modal")&&/INPUT|SELECT/.test(a.tagName))return;/* 正在打字時先不重畫 */
+  S.ready=true;render()}
+(async()=>{
+  if(/^https?:$/.test(location.protocol)){
+    try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),4000);
+      const r=await fetch("/api/people",{cache:"no-store",signal:ctl.signal});clearTimeout(tm);
+      if(r.ok&&(r.headers.get("content-type")||"").includes("json")){S.api=true;await pullApi();
+        setInterval(()=>{if(!document.hidden)pullApi().catch(()=>{})},4000);
+        document.addEventListener("visibilitychange",()=>{if(!document.hidden)pullApi().catch(()=>{})});return}}catch(e){}
+  }
+  let db=null;
+  for(let i=0;i<30&&!window.claude;i++)await new Promise(r=>setTimeout(r,100));
+  try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
+  if(!db){S.local=true;try{applyRoster(JSON.parse(localStorage.getItem("tc4roster")||"null"))}catch(e){}loadLocal();S.ready=true;
+    const b=document.getElementById("banner");b.textContent="目前連不到共享資料，填的內容只會存在這台裝置上，其他人看不到。";b.hidden=false;render();return}
+  S.db=db;
+  db.doc("meta/roster").onSnapshot(d=>{const v=d.exists&&d.data();if(v&&v.list){applyRoster(v.list);render()}},()=>{});
+  db.collection("people").onSnapshot(snap=>{
+    for(const d of snap.docs){if(pending[d.id])continue;const v=d.data();if(v)S.people[d.id]=norm(JSON.parse(JSON.stringify(v)))}
+    for(const ch of snap.docChanges())if(ch.type==="removed"&&!pending[ch.doc.id])delete S.people[ch.doc.id];
+    S.ready=true;render()},
+    err=>{S.ready=true;const b=document.getElementById("banner");b.textContent="共享資料暫時連不上，請重新整理頁面。";b.hidden=false;render()});
+  setTimeout(()=>{if(!S.ready){S.ready=true;render()}},8000);
+})();
+</script>
