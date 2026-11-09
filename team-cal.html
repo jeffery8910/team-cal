@@ -638,10 +638,12 @@ function renderAll(){
       return `<div><span class="av" style="background:${p.c};width:26px;height:26px;font-size:12px">${faceSVG(p.id)}</span>${esc(p.name)}<span class="st ${st}">${st==="ok"?(timeFor(q,S.picked)?timeFor(q,S.picked).from+"–"+timeFor(q,S.picked).to:"可以・時段未填"):st==="no"?"不行":"未填"}</span></div>`}).join("")+`</div>${(()=>{const o=dayOverlap(S.picked,dow);return o?`<p class="hint">可以的人共同時段：${o.ok?o.from+"–"+o.to:"沒有重疊"}</p>`:""})()}</section>`}
   const label=filled.length===PEOPLE.length?"所有人都可以":"已填的人都可以";
   const missing=PEOPLE.filter(p=>!hasData(S.people[p.id])).map(p=>p.name);
+  const near=[];if(!good.length&&filled.length>1)eachDay((k,dow)=>{const no=filled.filter(p=>status(S.people[p.id],k,dow)!=="ok");if(no.length===1)near.push([k,no[0].name+" 不行"])});
   return `<div class="panel">
   <section class="hero">
     <span class="k">${good.length?(missing.length?"已填的人最快可以約":"最快可以約"):"還沒有共同空檔"}</span>
-    <span class="big">${good.length?fmt(good[0])+(HOL[good[0]]?" "+HOL[good[0]]:""):"再調整一下規則看看"}</span>
+    <span class="big">${good.length?fmt(good[0])+(HOL[good[0]]?" "+HOL[good[0]]:""):near.length?"差一個人就成":"再調整一下規則看看"}</span>
+    ${!good.length&&near.length?`<span class="sub">這些日子只有一個人不行，可以問問他能不能調整：</span><div class="chips">${near.slice(0,10).map(([k,who])=>`<button class="chip" data-k="${k}">${fmt(k)}・${esc(who)}</button>`).join("")}${near.length>10?`<span class="sub">＋${near.length-10} 天</span>`:""}</div>`:""}
     ${missing.length?`<span class="sub warn">還有 ${missing.length} 人沒填（${missing.slice(0,4).map(esc).join("、")}${missing.length>4?"…":""}），等大家填完結果會再變。</span>`:""}<span class="sub">${label}的日子共 ${good.length} 天${ov?(ov.ok?`・這天共同時段 ${ov.from}–${ov.to}`:"・這天時段沒有重疊"):good.length?"・時段還沒填齊":""}</span>
     ${good.length>1?`<div class="chips">${good.slice(1,13).map(k=>`<button class="chip" data-k="${k}">${fmt(k)}${HOL[k]?" "+HOL[k]:""}</button>`).join("")}${good.length>13?`<span class="sub">＋${good.length-13} 天</span>`:""}</div>`:""}
     <div class="roster">${PEOPLE.map(p=>{const f=hasData(S.people[p.id]);return `<span class="${f?"":"off"}">${avs(p)}${esc(p.name)} ${f?"✓":"未填"}</span>`}).join("")}</div>
