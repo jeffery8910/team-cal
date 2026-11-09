@@ -1,6 +1,24 @@
 {
   "name": "team-cal",
   "private": true,
-  "scripts": { "deploy": "wrangler deploy" },
-  "devDependencies": { "wrangler": "^4.40.0" }
+  "description": "揪團日曆：大家標好空檔，自動找出共同可以的日子（Cloudflare Workers + D1）",
+  "scripts": {
+    "build:html": "python3 build.py",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.40.0"
+  },
+  "cloudflare": {
+    "label": "揪團日曆",
+    "products": ["Workers", "D1"],
+    "bindings": {
+      "ADMIN_PASSWORD": {
+        "description": "管理員密碼：之後在網站右上角 **管理** 用它登入，新增成員、修改活動設定。請設一組只有你知道的密碼。"
+      },
+      "DB": {
+        "description": "存放成員名單、活動設定和大家填的日期。部署時會自動建立，資料表也會在第一次打開網站時自動建好。"
+      }
+    }
+  }
 }

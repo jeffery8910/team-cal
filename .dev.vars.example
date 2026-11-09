@@ -1,0 +1,2 @@
+# 管理員密碼（部署時填寫；之後可在 Cloudflare → Worker → 設定 → 變數和密碼 修改）
+ADMIN_PASSWORD=

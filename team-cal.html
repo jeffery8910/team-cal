@@ -47,10 +47,18 @@ header h1{font-family:var(--display);font-size:clamp(28px,5.4vw,42px);margin:0;l
 header p{margin:0;color:var(--band-muted);font-size:14px}
 .toprow{display:flex;align-items:flex-start;gap:12px}
 .toprow header{flex:1;min-width:0}
+.toprow .adminbtn+.adminbtn{margin-left:-4px}
+a.adminbtn{text-decoration:none}
 .adminbtn{flex:none;display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:7px 12px 7px 9px;background:var(--band-soft);color:var(--band-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .adminbtn svg{width:18px;height:18px}
 .adminbtn.on{background:var(--cta);color:var(--cta-ink)}
 .alist{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
+.fld input,.fld textarea{font:inherit;font-size:15px;font-weight:400;color:var(--ink);padding:9px 12px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);background:var(--surface);width:100%}
+.fld textarea{resize:vertical;font-variant-numeric:tabular-nums;line-height:1.5}
+.fld input:focus,.fld textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--ok)}
+.fld2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal{max-height:calc(100vh - 32px);overflow:auto}
 .arow{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 8px;border-radius:16px;background:var(--paper)}
 .arow .av{width:32px;height:32px}
 .arow b{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -347,10 +355,10 @@ input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok)
 
 <div class="band"><div class="band-in">
   <div class="toprow"><header>
-    <span class="eyebrow">2026.11 – 2027.03</span>
-    <h1>揪團日曆</h1>
-    <p>每個人標好自己的空檔，系統自動找出大家都能約的日子。</p>
-  </header><button class="adminbtn" id="adminBtn" aria-label="管理員"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.2 12.2l2 2 3.8-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>管理</span></button></div>
+    <span class="eyebrow" id="rangeTxt">2026.11 – 2027.03</span>
+    <h1 id="titleTxt">揪團日曆</h1>
+    <p id="subTxt">每個人標好自己的空檔，系統自動找出大家都能約的日子。</p>
+  </header><button class="adminbtn" id="adminBtn" aria-label="管理員"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.2 12.2l2 2 3.8-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>管理</span></button><a class="adminbtn" id="guideLink" href="/guide" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1" fill="currentColor"/></svg><span>說明</span></a></div>
   <nav class="people" id="people" aria-label="選擇成員"></nav>
 </div></div>
 <div class="wrap">
@@ -366,9 +374,22 @@ let PEOPLE=[
   {id:"patrick",name:"Patrick",init:"P",c:"var(--p1)"},
   {id:"qingtong",name:"青彤",init:"青",c:"var(--p3)"},
   {id:"haitang",name:"海棠Jeffery",init:"海",c:"var(--p4)"}];
-const MONTHS=[[2026,11],[2026,12],[2027,1],[2027,2],[2027,3]];
-const HOL={"2026-12-25":"行憲","2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕","2027-02-06":"初一","2027-02-07":"初二","2027-02-08":"初三","2027-02-09":"補假","2027-02-10":"補假","2027-02-28":"228","2027-03-01":"補假"};
-const FEST={"2026-12-22":"冬至","2027-02-20":"元宵"};
+let MONTHS=[[2026,11],[2026,12],[2027,1],[2027,2],[2027,3]];
+let HOL={"2026-12-25":"行憲","2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕","2027-02-06":"初一","2027-02-07":"初二","2027-02-08":"初三","2027-02-09":"補假","2027-02-10":"補假","2027-02-28":"228","2027-03-01":"補假"};
+let FEST={"2026-12-22":"冬至","2027-02-20":"元宵"};
+/* ---------- 活動設定（管理員可在網頁上修改） ---------- */
+let CFG={title:"揪團日曆",subtitle:"每個人標好自己的空檔，系統自動找出大家都能約的日子。",start:"2026-11",end:"2027-03",time:{from:"10:30",to:"16:30"},holidays:{...HOL},festivals:{...FEST}};
+const TW_HOLIDAYS={/* 台灣 2027 國定假日（依人事行政總處 116 年行事曆，1–10 月；管理員可自行增刪） */
+  2027:{"2027-01-01":"元旦","2027-02-04":"小年夜","2027-02-05":"除夕","2027-02-06":"初一","2027-02-07":"初二","2027-02-08":"初三","2027-02-09":"補假","2027-02-10":"補假","2027-02-28":"228","2027-03-01":"補假","2027-04-04":"兒童節","2027-04-05":"清明","2027-04-06":"補假","2027-04-30":"補假","2027-05-01":"勞動節","2027-06-09":"端午","2027-09-15":"中秋","2027-09-28":"教師節","2027-10-10":"國慶","2027-10-11":"補假","2027-10-25":"光復節"}};
+function monthsBetween(a,b){const[ya,ma]=a.split("-").map(Number),[yb,mb]=b.split("-").map(Number);const out=[];let y=ya,m=ma;
+  while((y<yb||(y===yb&&m<=mb))&&out.length<24){out.push([y,m]);m++;if(m>12){m=1;y++}}return out.length?out:[[ya,ma]]}
+function applyConfig(c){if(!c||typeof c!=="object")return;
+  CFG=Object.assign({},CFG,c);CFG.time=Object.assign({from:"10:30",to:"16:30"},c.time||CFG.time);
+  MONTHS=monthsBetween(CFG.start,CFG.end);HOL=CFG.holidays||{};FEST=CFG.festivals||{};
+  if(typeof CATS!=="undefined")CATS[2][2]=Object.keys(HOL).filter(k=>MONTHS.some(([y,m])=>k.startsWith(y+"-"+String(m).padStart(2,"0")))).length+" 天";
+  const [ys,ms]=CFG.start.split("-"),[ye,me]=CFG.end.split("-");
+  const set=(id,t)=>{const el=document.getElementById(id);if(el)el.textContent=t};
+  set("rangeTxt",`${ys}.${ms} – ${ye}.${me}`);set("titleTxt",CFG.title);set("subTxt",CFG.subtitle);document.title=CFG.title}
 const WD=["日","一","二","三","四","五","六"];
 const TIMES=[];for(let h=0;h<=24;h++)for(const m of[0,30]){if(h===24&&m)break;TIMES.push(String(h).padStart(2,"0")+":"+(m?"30":"00"))}
 const LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -388,7 +409,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 function fmt(k){const[y,m,d]=k.split("-").map(Number);return `${m}/${d}（${WD[new Date(y,m-1,d).getDay()]}）`}
 
 function blankRules(){return{weekday:"",offday:"",holiday:"",dow:["","","","","","",""]}}
-function blank(){return{setup:true,pw:null,brush:"ok",dates:{},dayTimes:{},rules:blankRules(),time:{from:"10:30",to:"16:30"}}}
+function blank(){return{setup:true,pw:null,brush:"ok",dates:{},dayTimes:{},rules:blankRules(),time:{...CFG.time}}}
 function norm(p){if(!p)return p;const r=p.rules||{};
   if(!Array.isArray(r.dow)||r.dow.length!==7||typeof r.weekday==="boolean"||typeof r.holiday==="boolean"){
     const n=blankRules();
@@ -396,7 +417,7 @@ function norm(p){if(!p)return p;const r=p.rules||{};
     if(Array.isArray(r.dow))r.dow.forEach(d=>{if(typeof d==="number")n.dow[d]="no"});
     p.rules=n}
   p.dates=p.dates||{};for(const k in p.dates){if(!["ok","no","na"].includes(p.dates[k]))p.dates[k]=p.mode==="ok"?"ok":"no"}
-  p.dayTimes=p.dayTimes||{};p.time=p.time||{from:"10:30",to:"16:30"};p.brush=["ok","no","na"].includes(p.brush)?p.brush:"ok";p.catTime=p.catTime||{};return p}
+  p.dayTimes=p.dayTimes||{};p.time=p.time||{...CFG.time};p.brush=["ok","no","na"].includes(p.brush)?p.brush:"ok";p.catTime=p.catTime||{};return p}
 
 /* 優先順序：手動設定 > 國定假日 > 星期幾 > 平日／假日 > 未填 */
 /* 套用到這天的規則中，最後設定的那條優先（沒有時間記錄時：國定假日 > 星期幾 > 平日／假日） */
@@ -441,6 +462,7 @@ function loadLocal(){for(const p of PEOPLE){try{const v=localStorage.getItem("tc
 /* ---------- render ---------- */
 function renderPeople(){
   const el=document.getElementById("people");
+  if(!S.ready){el.innerHTML="";return}
   el.innerHTML=PEOPLE.map(p=>{const d=S.people[p.id];
     const st=!S.ready?"載入中…":!d?"還沒填":d.prefill?"管理員已預填":(d.pw?LOCK+" 已填寫":"已填寫");
     return `<button class="pbtn" data-p="${p.id}" aria-pressed="${S.view==="me"&&S.sel===p.id}"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><span class="pmeta"><span class="pname">我是 ${esc(p.name)}</span><span class="pstat">${st}</span></span></button>`}).join("")+
@@ -584,6 +606,7 @@ function overlap(){return null}
 function renderAll(){
   const filled=PEOPLE.filter(p=>S.people[p.id]);
   const avs=(p)=>`<span class="av" style="background:${p.c}">${faceSVG(p.id)}</span>`;
+  if(!PEOPLE.length&&S.ready)return `<section class="guide"><span class="eyebrow">還沒有成員</span><h2>先請管理員加入成員</h2><p class="lead">按右上角「管理」登入，在「管理成員」新增大家的名字，也可以在「活動設定」改活動名稱、日期範圍和假日。</p></section>`;
   if(!filled.length&&S.ready)return `<section class="guide"><span class="eyebrow">開始之前</span><h2>三步驟找出大家的空檔</h2>
     <ol class="gsteps"><li><span class="num">1</span><div><b>點自己的名字</b><small>第一次可以順便設密碼</small></div></li>
     <li><span class="num">2</span><div><b>直接點月曆標日期</b><small>也能一次設定平日、假日、星期幾</small></div></li>
@@ -803,7 +826,7 @@ document.getElementById("main").addEventListener("change",e=>{const p=S.people[S
 /* ---------- 成員名單與管理員 ---------- */
 const COLORS=["#1f8a86","#3b66b0","#7d4fb0","#c7742a","#c4523d","#2f7d5b","#b0477f","#6b7a2f","#4a5a8a","#a0622d"];
 const DEFAULT_ROSTER=PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c}));
-function applyRoster(list){if(!Array.isArray(list)||!list.length)return;PEOPLE=list.map(x=>({id:String(x.id),name:String(x.name||"").slice(0,20)||"成員",c:x.c||COLORS[0]}));
+function applyRoster(list){if(!Array.isArray(list))return;PEOPLE=list.map(x=>({id:String(x.id),name:String(x.name||"").slice(0,20)||"成員",c:x.c||COLORS[0]}));
   if(S.sel&&!PEOPLE.some(p=>p.id===S.sel)){S.view="all";S.sel=null}}
 let adminPass=null;try{adminPass=sessionStorage.getItem("tc4admin")}catch(e){}
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
@@ -821,7 +844,9 @@ async function removePerson(id){
   else{try{localStorage.removeItem("tc4:"+id)}catch(e){}}
   delete S.people[id]}
 function renderAdminBtn(){const b=document.getElementById("adminBtn");b.classList.toggle("on",!!adminPass);b.querySelector("span").textContent=adminPass?"管理中":"管理"}
-function adminLogin(){
+async function adminConfigured(){if(!S.api)return true;try{const r=await fetch("/api/admin/status",{cache:"no-store"});if(r.ok)return !!(await r.json()).configured}catch(e){}return true}
+async function adminLogin(){
+  if(!(await adminConfigured())){modal(`<div class="bigic">${IC.lock}</div><h2>還沒設定管理員密碼</h2><p class="hint">部署時沒有填 ADMIN_PASSWORD。請到 Cloudflare 後台 → 這個 Worker → 設定 → 「變數和密碼」新增一個密碼類型的 <b>ADMIN_PASSWORD</b>，儲存後回來重新整理就能登入。</p><div class="row"><button class="btn pri" id="ok">知道了</button></div>`,m=>{m.querySelector("#ok").onclick=closeModal});return}
   modal(`<div class="bigic">${IC.lock}</div><h2>管理員登入</h2><p class="hint">登入後可以新增或刪除成員。</p>
     <input id="apw" type="password" inputmode="numeric" placeholder="管理員密碼" autocomplete="current-password"><p class="err" id="e"></p>
     <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">登入</button></div>`,m=>{
@@ -831,6 +856,38 @@ function adminLogin(){
       if(!ok){m.querySelector("#e").textContent="密碼不對";return}
       adminPass=v;try{sessionStorage.setItem("tc4admin",v)}catch(e){}renderAdminBtn();adminPanel()};
     m.querySelector("#ok").onclick=go;m.querySelector("#apw").onkeydown=e=>{if(e.key==="Enter")go()}})}
+function holToText(o){return Object.keys(o||{}).sort().map(k=>k+" "+o[k]).join("\n")}
+function textToHol(t){const o={},bad=[];t.split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(line=>{const m=line.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\s*(.*)$/);
+  if(!m){bad.push(line);return}const k=`${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;const d=new Date(k+"T00:00:00");if(isNaN(d)||d.getMonth()+1!==+m[2]){bad.push(line);return}o[k]=(m[4]||"假日").slice(0,6)});return{o,bad}}
+async function saveConfig(c){
+  if(S.api){const r=await fetch("/api/config",{method:"PUT",headers:{"content-type":"application/json","x-admin-pass":adminPass||""},body:JSON.stringify(c)});if(!r.ok)throw new Error("config "+r.status)}
+  else if(S.db){await S.db.doc("meta/config").set(c)}
+  else{try{localStorage.setItem("tc4config",JSON.stringify(c))}catch(e){}}
+  applyConfig(c);render()}
+function configDialog(){const c=CFG;
+  modal(`<h2>活動設定</h2><p class="hint">改完按儲存，所有人重新整理後就會看到。已經填好的資料不會被刪掉。</p>
+    <label class="fld"><span>活動名稱</span><input id="cTitle" maxlength="30" value="${esc(c.title)}"></label>
+    <label class="fld"><span>一句話說明</span><input id="cSub" maxlength="60" value="${esc(c.subtitle)}"></label>
+    <div class="fld2"><label class="fld"><span>從哪個月</span><input id="cStart" type="month" value="${c.start}"></label><label class="fld"><span>到哪個月</span><input id="cEnd" type="month" value="${c.end}"></label></div>
+    <div class="fld"><span>預設可以的時段（新成員和「點成可以」會帶入）</span><div class="times">${tIn("cFrom",c.time.from)}<span>–</span>${tIn("cTo",c.time.to)}</div></div>
+    <label class="fld"><span>放假日（一行一天：日期 名稱）</span><textarea id="cHol" rows="6" placeholder="2027-02-05 除夕">${esc(holToText(c.holidays))}</textarea></label>
+    <div class="row" style="justify-content:flex-start;gap:6px">${Object.keys(TW_HOLIDAYS).map(y=>`<button class="btn" data-preset="${y}" style="padding:7px 12px;font-size:13px">＋ 台灣 ${y} 國定假日</button>`).join("")}<button class="btn" id="clrHol" style="padding:7px 12px;font-size:13px">清空</button></div>
+    <label class="fld"><span>不放假的節日（只做標示）</span><textarea id="cFest" rows="3" placeholder="2027-02-20 元宵">${esc(holToText(c.festivals))}</textarea></label>
+    <p class="err" id="e"></p>
+    <div class="row"><button class="btn" id="back">回到成員</button><button class="btn pri" id="save">儲存設定</button></div>`,m=>{
+    m.querySelector("#back").onclick=adminPanel;
+    m.querySelectorAll("[data-preset]").forEach(b=>b.onclick=()=>{const ta=m.querySelector("#cHol"),cur=textToHol(ta.value).o;Object.assign(cur,TW_HOLIDAYS[b.dataset.preset]);ta.value=holToText(cur)});
+    m.querySelector("#clrHol").onclick=()=>{m.querySelector("#cHol").value=""};
+    m.querySelector("#save").onclick=async()=>{const e=m.querySelector("#e"),v=id=>m.querySelector(id).value.trim();e.textContent="";
+      const st=v("#cStart"),en=v("#cEnd"),f=v("#cFrom"),t=v("#cTo");
+      if(!v("#cTitle")){e.textContent="請填活動名稱";return}
+      if(!/^\d{4}-\d{2}$/.test(st)||!/^\d{4}-\d{2}$/.test(en)||st>en){e.textContent="日期範圍不對：開始月份要早於結束月份";return}
+      if(monthsBetween(st,en).length>=24&&en>st){e.textContent="日期範圍最多 24 個月";return}
+      if(!f||!t||f>=t){e.textContent="預設時段：結束時間要晚於開始時間";return}
+      const h=textToHol(m.querySelector("#cHol").value),fe=textToHol(m.querySelector("#cFest").value);
+      if(h.bad.length||fe.bad.length){e.textContent="這幾行看不懂，請用「2027-02-05 除夕」的格式："+h.bad.concat(fe.bad).slice(0,3).join("、");return}
+      const nc={title:v("#cTitle"),subtitle:v("#cSub"),start:st,end:en,time:{from:f,to:t},holidays:h.o,festivals:fe.o};
+      try{await saveConfig(nc);toast("活動設定已儲存");adminPanel()}catch(err){e.textContent="儲存失敗，請重新登入管理員再試"}}})}
 function adminPanel(){let color=COLORS.find(c=>!PEOPLE.some(p=>p.c===c))||COLORS[PEOPLE.length%COLORS.length];
   modal(`<h2>管理成員</h2><p class="hint">目前 ${PEOPLE.length} 人。刪除成員會一起刪掉他填的資料。</p>
     <div class="alist">${PEOPLE.map(p=>`<div class="arow"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><b>${esc(p.name)}</b><small>${!S.people[p.id]?"還沒填":S.people[p.id].prefill?"管理員預填":"已填寫"}</small><button class="del" data-fillfor="${p.id}" style="background:var(--ok-bg);color:var(--ok)">代填</button><button class="del" data-del="${p.id}"${PEOPLE.length<=1?" disabled":""}>刪除</button></div>`).join("")}</div>
@@ -838,7 +895,8 @@ function adminPanel(){let color=COLORS.find(c=>!PEOPLE.some(p=>p.c===c))||COLORS
     <div class="addrow"><input id="nn" maxlength="20" placeholder="名字，例如：小明"><button class="btn pri" id="add">新增</button></div>
     <div class="swatches" role="radiogroup" aria-label="顏色">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" aria-label="顏色 ${c}" aria-pressed="${c===color}"></button>`).join("")}</div>
     <p class="err" id="e"></p>
-    <div class="row"><button class="btn" id="logout">登出管理員</button><button class="btn pri" id="done">完成</button></div>`,m=>{
+    <div class="row" style="justify-content:space-between"><button class="btn" id="cfgBtn">${IC.pencil.replace('<svg','<svg style="width:20px;height:20px;vertical-align:-5px;margin-right:4px"')}活動設定</button><span style="flex:1"></span><button class="btn" id="logout">登出管理員</button><button class="btn pri" id="done">完成</button></div>`,m=>{
+    m.querySelector("#cfgBtn").onclick=configDialog;
     m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{color=b.dataset.c;m.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.c===color)))});
     m.querySelector("#done").onclick=closeModal;
     m.querySelectorAll("[data-fillfor]").forEach(b=>b.onclick=()=>{closeModal();openPerson(b.dataset.fillfor)});
@@ -865,7 +923,7 @@ render();
 let lastRemote="";
 async function pullApi(){
   const r=await fetch("/api/people",{cache:"no-store"});if(!r.ok)throw new Error("api "+r.status);
-  const all=await r.json();try{const rr=await fetch("/api/roster",{cache:"no-store"});if(rr.ok){const rl=await rr.json();if(JSON.stringify(rl)!==JSON.stringify(PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c})))){applyRoster(rl);lastRemote=""}}}catch(e){}
+  const all=await r.json();try{const rc=await fetch("/api/config",{cache:"no-store"});if(rc.ok){const cf=await rc.json();if(JSON.stringify(cf)!==JSON.stringify(S.lastCfg)){S.lastCfg=cf;applyConfig(cf);lastRemote=""}}}catch(e){}try{const rr=await fetch("/api/roster",{cache:"no-store"});if(rr.ok){const rl=await rr.json();if(JSON.stringify(rl)!==JSON.stringify(PEOPLE.map(p=>({id:p.id,name:p.name,c:p.c})))){applyRoster(rl);lastRemote=""}}}catch(e){}
   const txt=JSON.stringify(all);
   if(txt===lastRemote&&S.ready)return;lastRemote=txt;
   const beforeJ=JSON.stringify(S.people);
@@ -878,16 +936,17 @@ async function pullApi(){
   if(/^https?:$/.test(location.protocol)){
     try{const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),4000);
       const r=await fetch("/api/people",{cache:"no-store",signal:ctl.signal});clearTimeout(tm);
-      if(r.ok&&(r.headers.get("content-type")||"").includes("json")){S.api=true;await pullApi();
+      if(r.ok&&(r.headers.get("content-type")||"").includes("json")){S.api=true;document.getElementById("guideLink").hidden=false;await pullApi();
         setInterval(()=>{if(!document.hidden)pullApi().catch(()=>{})},4000);
         document.addEventListener("visibilitychange",()=>{if(!document.hidden)pullApi().catch(()=>{})});return}}catch(e){}
   }
   let db=null;
   for(let i=0;i<30&&!window.claude;i++)await new Promise(r=>setTimeout(r,100));
   try{db=window.claude?await window.claude.use("db"):null}catch(e){db=null}
-  if(!db){S.local=true;try{applyRoster(JSON.parse(localStorage.getItem("tc4roster")||"null"))}catch(e){}loadLocal();S.ready=true;
+  if(!db){S.local=true;try{applyConfig(JSON.parse(localStorage.getItem("tc4config")||"null"))}catch(e){}try{applyRoster(JSON.parse(localStorage.getItem("tc4roster")||"null"))}catch(e){}loadLocal();S.ready=true;
     const b=document.getElementById("banner");b.textContent="目前連不到共享資料，填的內容只會存在這台裝置上，其他人看不到。";b.hidden=false;render();return}
   S.db=db;
+  db.doc("meta/config").onSnapshot(d=>{const v=d.exists&&d.data();if(v){applyConfig(v);render()}},()=>{});
   db.doc("meta/roster").onSnapshot(d=>{const v=d.exists&&d.data();if(v&&v.list){applyRoster(v.list);render()}},()=>{});
   db.collection("people").onSnapshot(snap=>{
     for(const d of snap.docs){if(pending[d.id])continue;const v=d.data();if(v)S.people[d.id]=norm(JSON.parse(JSON.stringify(v)))}
