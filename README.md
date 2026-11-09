@@ -5,8 +5,7 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jeffery8910/team-cal)
 
-- 實際網站：https://team-cal.jeffery8910.workers.dev
-- 使用說明：部署後打開 `/guide`（例：https://team-cal.jeffery8910.workers.dev/guide）
+- 使用說明：部署後打開你網站的 `/guide`
 
 ## 一鍵部署
 

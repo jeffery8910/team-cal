@@ -59,7 +59,7 @@ code,kbd{font-family:var(--mono);font-size:.88em;background:var(--sunk);padding:
 .case .who{font-size:14px;color:var(--muted);margin:0 0 14px}
 .case ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
 .case ol li::marker{color:var(--cta);font-weight:700}
-.ui{background:var(--surface);border-radius:22px;padding:16px;box-shadow:var(--shadow);font-size:13px;min-width:0}
+.ui{color:var(--ink);background:var(--surface);border-radius:22px;padding:16px;box-shadow:var(--shadow);font-size:13px;min-width:0}
 .ui .t{font-weight:700;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .ui .t small{font-weight:400;color:var(--muted)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--sunk);font-weight:700;font-size:12px}
@@ -121,7 +121,7 @@ footer{max-width:1040px;margin:0 auto;padding:24px 16px 48px;color:var(--muted);
     <p class="lede">一群人各自標出可以、不行的日子和時段，系統自動算出大家都能約的那一天。按一個按鈕就能部署成你自己的網站，活動名稱、日期範圍、假日和成員都能在網頁上改。</p>
     <div class="ctas">
       <a class="btn pri" id="deployBtn" href="https://deploy.workers.cloudflare.com/?url=https://github.com/jeffery8910/team-cal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.9-9.9A6 6 0 0 1 17.6 9 4.5 4.5 0 0 1 17 18z" fill="currentColor"/></svg>一鍵部署到 Cloudflare</a>
-      <a class="btn ghost" id="demoLink" href="https://team-cal.jeffery8910.workers.dev/" target="_blank" rel="noopener">看實際網站</a>
+      <a class="btn ghost" id="demoLink" href="https://github.com/jeffery8910/team-cal" target="_blank" rel="noopener">看原始碼</a>
     </div>
     <p class="note-s">部署需要 Cloudflare 和 GitHub 帳號，兩個都可以免費申請。</p>
   </div>
@@ -246,6 +246,7 @@ footer{max-width:1040px;margin:0 auto;padding:24px 16px 48px;color:var(--muted);
           <li>月曆上深綠色格子是所有人都可以，格子裡直接寫共同時段。</li>
           <li>每格底下的小圓點代表每個人：綠是可以、紅是不行、灰是還沒填。</li>
           <li>點任一天，會列出每個人當天的狀態和時段，方便找出是誰卡住、要不要喬一下。</li>
+          <li>還有人沒填時，大卡會寫「已填的人最快可以約」，並列出誰還沒填。已經過去的日子會變淡，不會被算進來。</li>
         </ol>
       </div>
       <div class="ui" aria-label="合併結果示意">
@@ -311,6 +312,7 @@ git commit -am "改了什麼" &amp;&amp; git push   # 推上去就會自動部�
       <details><summary>資料存在哪裡？</summary><p>存在你自己 Cloudflare 帳號裡的 D1 資料庫，只有你看得到後台。網站本身任何拿到網址的人都能打開和填寫。</p></details>
       <details><summary>要付錢嗎？</summary><p>Cloudflare Workers 和 D1 都有免費方案，十幾二十人的揪團通常用不完。實際額度以 Cloudflare 的公告為準。</p></details>
       <details><summary>成員密碼安全嗎？</summary><p>成員密碼是用來防止別人不小心改到你的日曆，不是銀行等級的保護，請不要用重要帳號的密碼。管理員密碼只存在 Cloudflare 的密碼變數裡。</p></details>
+      <details><summary>成員顯示「填寫中」是什麼意思？</summary><p>表示他已經點進來過，但還沒標任何可以或不行的日子。合併結果只會把真的有填的人算進去。</p></details>
       <details><summary>部署時忘了填管理員密碼怎麼辦？</summary><p>到 Cloudflare 後台 → 你的 Worker → 設定 → 變數和密碼，新增密碼類型的 <code>ADMIN_PASSWORD</code>，儲存後重新整理網站就能登入。</p></details>
       <details><summary>一鍵部署按鈕打不開？</summary><p>按鈕只支援公開的 GitHub 或 GitLab 專案。如果你是從自己的私人專案部署，請先把專案設成公開，或在電腦上執行 <code>npx wrangler deploy</code>。</p></details>
     </div>
@@ -318,7 +320,7 @@ git commit -am "改了什麼" &amp;&amp; git push   # 推上去就會自動部�
 </main>
 <footer>揪團日曆 · 以 Cloudflare Workers 與 D1 打造 · 原始碼可在 GitHub 取得</footer>
 <script>
-/* 放在自己部署的網站上時，「看實際網站」指回自己的首頁 */
+/* 放在自己部署的網站上時，第二顆按鈕改成回到自己的首頁 */
 (async()=>{try{if(!/^https?:$/.test(location.protocol))return;const r=await fetch("/api/config",{cache:"no-store"});
   if(r.ok&&(r.headers.get("content-type")||"").includes("json")){const a=document.getElementById("demoLink");a.href="/";a.textContent="回到揪團日曆";a.removeAttribute("target")}}catch(e){}})();
 </script>

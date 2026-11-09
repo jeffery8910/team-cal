@@ -49,6 +49,7 @@ header p{margin:0;color:var(--band-muted);font-size:14px}
 .toprow header{flex:1;min-width:0}
 .toprow .adminbtn+.adminbtn{margin-left:-4px}
 a.adminbtn{text-decoration:none}
+@media (max-width:520px){.toprow .adminbtn span{display:none}.toprow .adminbtn{padding:8px}.toprow .adminbtn svg{width:20px;height:20px}}
 .adminbtn{flex:none;display:flex;align-items:center;gap:6px;border:0;border-radius:999px;padding:7px 12px 7px 9px;background:var(--band-soft);color:var(--band-ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .adminbtn svg{width:18px;height:18px}
 .adminbtn.on{background:var(--cta);color:var(--cta-ink)}
@@ -59,6 +60,12 @@ a.adminbtn{text-decoration:none}
 .fld input:focus,.fld textarea:focus{outline:none;box-shadow:inset 0 0 0 2px var(--ok)}
 .fld2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .modal{max-height:calc(100vh - 32px);overflow:auto}
+.evcard{font:inherit;color:inherit;text-align:left;border:0;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:18px;background:var(--ok-bg)}
+.evcard span{display:flex;flex-direction:column;flex:1;min-width:0}
+.evcard small{font-size:12px;font-weight:700;color:var(--ok)}
+.evcard b{font-size:17px}
+.evcard em{font-style:normal;font-size:12px;color:var(--muted)}
+.evcard i{font-style:normal;font-weight:700;color:var(--ok);white-space:nowrap}
 .arow{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 8px;border-radius:16px;background:var(--paper)}
 .arow .av{width:32px;height:32px}
 .arow b{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -114,6 +121,7 @@ a.adminbtn{text-decoration:none}
 .whohead .av{width:44px;height:44px;font-size:17px;box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--sunk)}
 .whohead .eyebrow{color:var(--muted)}
 .stepcard h2{font-family:var(--display);font-size:clamp(23px,4.6vw,30px);margin:2px 0 0;line-height:1.25;text-wrap:balance}
+.nb{display:inline-block}
 .lead{margin:0;font-size:15px;color:var(--ink);opacity:.85}
 .note{background:var(--fest-bg);color:var(--fest);border-radius:14px;padding:10px 14px;font-size:13px}
 .subhead{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-top:4px}
@@ -244,6 +252,8 @@ input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok)
 @media (hover:hover){.day:hover{transform:translateY(-1px)}}
 .day.pressing{transform:scale(.9);transition:transform .5s}
 .blank{aspect-ratio:1/1}
+.day.past{opacity:.32;cursor:default;background:transparent!important;box-shadow:none!important}
+.day.past:hover{transform:none}
 .day.st-na{background:var(--paper)}
 .day.st-no{background:var(--no-bg)}
 .day.st-no .n{color:var(--no)!important;text-decoration:line-through;text-decoration-thickness:2px}
@@ -256,6 +266,7 @@ input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok)
 /* merged view cells */
 .day .lb.tm1{font-weight:700;font-size:clamp(8px,2.3cqw,11px);letter-spacing:-.03em}
 .dots{display:flex;gap:2px;margin-top:1px}
+.day .dots{margin-top:0}
 .dot{width:clamp(5px,1.4cqw,7px);height:clamp(5px,1.4cqw,7px);border-radius:50%;background:var(--line)}
 .dot.ok{background:var(--ok)}.dot.no{background:var(--no)}
 .day.most{background:var(--ok-bg)}
@@ -272,6 +283,7 @@ input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok)
 .hero .k{font-size:12px;letter-spacing:.16em;color:var(--cta);font-weight:700}
 .hero .big{font-family:var(--display);font-size:clamp(32px,7vw,52px);line-height:1.05}
 .hero .sub{color:var(--band-muted);font-size:14px}
+.hero .sub.warn{color:var(--band-ink);background:var(--band-soft);border-radius:12px;padding:6px 10px;align-self:flex-start}
 .chips{display:flex;flex-wrap:wrap;gap:6px;position:relative;z-index:1}
 .chip{padding:6px 12px;border-radius:999px;background:var(--band-soft);color:var(--band-ink);font-size:13px;font-weight:700;border:0;font-family:inherit;cursor:pointer;font-variant-numeric:tabular-nums}
 .chip:hover{background:rgba(244,241,234,.22)}
@@ -308,7 +320,8 @@ input[type="time"]:focus,.modal input:focus{box-shadow:inset 0 0 0 2px var(--ok)
 .modal h2{padding-right:40px;margin:0;font-size:21px;font-family:var(--display)}
 .modal input{width:100%}
 .err{color:var(--no);font-size:13px;margin:0;min-height:1em}
-.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--cta);color:var(--cta-ink);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;z-index:20;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+body:has(#modal:not([hidden])) .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top,0px))}
+.toast{position:fixed;left:50%;bottom:calc(var(--dock,0px) + 16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--band);color:var(--band-ink);border:1px solid var(--band-soft);padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;z-index:20;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
 .bulk{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--band);color:var(--band-ink);border-radius:22px 22px 0 0;padding:12px max(16px,calc((100% - 1180px)/2)) calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;box-shadow:0 -8px 24px rgba(0,0,0,.18)}
 .bulk .brow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .bulk .brow.sel{border-top:1px solid var(--band-soft);padding-top:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
@@ -436,6 +449,7 @@ function status(p,k,dow){ if(!p||!p.setup)return "na";
   return ruleFor(p,k,dow)||"na"}
 /* 四種狀態：filled 已填（可以＋時段）、ok 可以（時段未填）、no 不行、na 未填 */
 function state(p,k,dow){const s=status(p,k,dow);return s==="ok"&&p.dayTimes&&p.dayTimes[k]?"filled":s}
+function hasData(p){if(!p)return false;if(p.prefill)return true;let any=false;eachDay((k,dow)=>{if(!any&&status(p,k,dow)!=="na")any=true});return any}
 function timeFor(p,k){return (p&&p.dayTimes&&p.dayTimes[k])||null}
 const tl=(a,b)=>`<span class="lb tm"><span>${hh(a)}</span><span>${hh(b)}</span></span>`;
 const hh=t=>{const h=+t.slice(0,2),m=t.slice(3,5);return m==="00"?String(h):h+":"+m};
@@ -464,9 +478,9 @@ function renderPeople(){
   const el=document.getElementById("people");
   if(!S.ready){el.innerHTML="";return}
   el.innerHTML=PEOPLE.map(p=>{const d=S.people[p.id];
-    const st=!S.ready?"載入中…":!d?"還沒填":d.prefill?"管理員已預填":(d.pw?LOCK+" 已填寫":"已填寫");
+    const st=!S.ready?"載入中…":!d?"還沒填":d.prefill?"管理員已預填":!hasData(d)?"填寫中":(d.pw?LOCK+" 已填寫":"已填寫");
     return `<button class="pbtn" data-p="${p.id}" aria-pressed="${S.view==="me"&&S.sel===p.id}"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><span class="pmeta"><span class="pname">我是 ${esc(p.name)}</span><span class="pstat">${st}</span></span></button>`}).join("")+
-    `<button class="pbtn all" data-p="__all" aria-pressed="${S.view==="all"}"><span class="av grp"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="13" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M4 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="27" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M18 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="20" cy="14" r="6" fill="currentColor"/><path d="M9.5 34c.8-7 5.2-10.4 10.5-10.4S29.7 27 30.5 34z" fill="currentColor"/></svg></span><span class="pmeta"><span class="pname">合併結果</span><span class="pstat">${PEOPLE.filter(p=>S.people[p.id]).length}/${PEOPLE.length} 人已填</span></span></button>`;
+    `<button class="pbtn all" data-p="__all" aria-pressed="${S.view==="all"}"><span class="av grp"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="13" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M4 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="27" cy="16" r="5" fill="currentColor" opacity=".7"/><path d="M18 33c.6-6 4.4-9 9-9s8.4 3 9 9z" fill="currentColor" opacity=".7"/><circle cx="20" cy="14" r="6" fill="currentColor"/><path d="M9.5 34c.8-7 5.2-10.4 10.5-10.4S29.7 27 30.5 34z" fill="currentColor"/></svg></span><span class="pmeta"><span class="pname">合併結果</span><span class="pstat">${PEOPLE.filter(p=>hasData(S.people[p.id])).length}/${PEOPLE.length} 人已填</span></span></button>`;
 }
 
 function monthsHTML(cellFn){
@@ -474,14 +488,15 @@ function monthsHTML(cellFn){
     const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();
     let h=`<section class="month"><h3>${m}月<small>${y}</small></h3><div class="grid">`+WD.map((w,i)=>`<div class="wd s${i}">${w}</div>`).join("");
     for(let i=0;i<first;i++)h+=`<div class="blank"></div>`;
-    for(let d=1;d<=n;d++){const k=key(y,m,d),dow=(first+d-1)%7;h+=cellFn(k,d,dow)}
+    for(let d=1;d<=n;d++){const k=key(y,m,d),dow=(first+d-1)%7;h+=k<TODAYK?`<div class="${baseCls(k,dow)} past" aria-label="${fmt(k)} 已經過了"><span class="n">${d}</span>${lab(k)}</div>`:cellFn(k,d,dow)}
     return h+`</div></section>`}).join("")+`</div>`;
 }
 function lab(k){return HOL[k]?`<span class="lb">${HOL[k]}</span>`:FEST[k]?`<span class="lb">${FEST[k]}</span>`:""}
 function baseCls(k,dow){return `day s${dow}${HOL[k]?" hol":""}${FEST[k]?" fest":""}`}
 
 function ruleRow(f,t,sub,v,sm){return `<div class="rule${sm?" sm":""}"><span class="lbl">${t}${sub?`<small>${sub}</small>`:""}</span><span class="seg" role="group" aria-label="${t}"><button data-rule="${f}" data-v="ok" aria-pressed="${v==="ok"}">可以</button><button data-rule="${f}" data-v="no" aria-pressed="${v==="no"}">不行</button><button data-rule="${f}" data-v="clr"${v?"":" disabled"}>重置</button></span></div>`}
-function eachDay(fn){for(const[y,m]of MONTHS){const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();for(let d=1;d<=n;d++)fn(key(y,m,d),(first+d-1)%7)}}
+const TODAYK=(()=>{const t=new Date();return key(t.getFullYear(),t.getMonth()+1,t.getDate())})();
+function eachDay(fn){/* 只算今天以後的日子 */for(const[y,m]of MONTHS){const first=new Date(y,m-1,1).getDay(),n=new Date(y,m,0).getDate();for(let d=1;d<=n;d++){const k=key(y,m,d);if(k>=TODAYK)fn(k,(first+d-1)%7)}}}
 const STL={filled:"已填",ok:"可以",no:"不行",na:"未填"};
 const CATS=[["weekday","平日","一到五，不含國定假日"],["offday","假日","週末＋國定假日"],["holiday","國定假日","11 天"]].concat(WD.map((w,i)=>["dow"+i,"星期"+w,""]));
 function inCat(c,k,dow){if(c==="all")return true;if(c==="weekday")return dow>=1&&dow<=5&&!HOL[k];if(c==="offday")return dow===0||dow===6||!!HOL[k];if(c==="holiday")return !!HOL[k];return dow===+c.slice(3)}
@@ -581,7 +596,7 @@ function renderMe(){
   return `<div class="wizbar" role="list">${STEPS.map(([t],i)=>`<button role="listitem" class="wz${i+1<st?" done":""}${i+1===st?" cur":""}" data-step="${i+1}"${i+1===st?' aria-current="step"':""}><span class="wn">${i+1<st?"✓":i+1}</span><span class="wt">${t}</span></button>`).join("")}</div>
   <div class="me">
   <section class="stepcard">
-    ${adminPass?`<div class="note">管理員模式：你正在幫 ${esc(P.name)} ${p.prefill?"預先填寫，他第一次進來時會看到這些內容，也能自己修改":"修改資料"}。</div>`:""}<div class="whohead"><span class="av" style="background:${P.c}">${faceSVG(P.id)}</span><div><span class="eyebrow">${esc(P.name)}・步驟 ${st} / 4</span><h2>${STEPS[st-1][1]}</h2></div></div>
+    ${adminPass?`<div class="note">管理員模式：你正在幫 ${esc(P.name)} ${p.prefill?"預先填寫，他第一次進來時會看到這些內容，也能自己修改":"修改資料"}。</div>`:""}<div class="whohead"><span class="av" style="background:${P.c}">${faceSVG(P.id)}</span><div><span class="eyebrow">${esc(P.name)}・步驟 ${st} / 4</span><h2>${STEPS[st-1][1].split(/(?<=，)/).map(x=>`<span class="nb">${x}</span>`).join("")}</h2></div></div>
     ${stepBody(p,c)}
     <div class="tbar"><div class="track">${["filled","ok","no","na"].map(x=>c[x]?`<i class="k-${x}" style="flex:${c[x]}"></i>`:"").join("")}</div><div class="keys">${["filled","ok","no","na"].map(x=>`<span><i class="k-${x}"></i>${x==="ok"?"可以・時段未填":STL[x]} <b>${c[x]}</b></span>`).join("")}</div></div>
     <div class="wiznav${S.multi?" hide":""}">${prev}${next}</div>
@@ -604,7 +619,7 @@ function renderMe(){
 function overlap(){return null}
 
 function renderAll(){
-  const filled=PEOPLE.filter(p=>S.people[p.id]);
+  const filled=PEOPLE.filter(p=>hasData(S.people[p.id]));
   const avs=(p)=>`<span class="av" style="background:${p.c}">${faceSVG(p.id)}</span>`;
   if(!PEOPLE.length&&S.ready)return `<section class="guide"><span class="eyebrow">還沒有成員</span><h2>先請管理員加入成員</h2><p class="lead">按右上角「管理」登入，在「管理成員」新增大家的名字，也可以在「活動設定」改活動名稱、日期範圍和假日。</p></section>`;
   if(!filled.length&&S.ready)return `<section class="guide"><span class="eyebrow">開始之前</span><h2>三步驟找出大家的空檔</h2>
@@ -621,20 +636,21 @@ function renderAll(){
   if(S.picked){const[y,m,d]=S.picked.split("-").map(Number);const dow=new Date(y,m-1,d).getDay();
     detail=`<section class="card"><h2>${fmt(S.picked)}${HOL[S.picked]?`・${HOL[S.picked]}`:FEST[S.picked]?`・${FEST[S.picked]}`:""}</h2><div class="who">`+PEOPLE.map(p=>{const q=S.people[p.id],st=status(q,S.picked,dow);
       return `<div><span class="av" style="background:${p.c};width:26px;height:26px;font-size:12px">${faceSVG(p.id)}</span>${esc(p.name)}<span class="st ${st}">${st==="ok"?(timeFor(q,S.picked)?timeFor(q,S.picked).from+"–"+timeFor(q,S.picked).to:"可以・時段未填"):st==="no"?"不行":"未填"}</span></div>`}).join("")+`</div>${(()=>{const o=dayOverlap(S.picked,dow);return o?`<p class="hint">可以的人共同時段：${o.ok?o.from+"–"+o.to:"沒有重疊"}</p>`:""})()}</section>`}
-  const label=filled.length===PEOPLE.length?"所有人都可以":"目前填好的人都可以";
+  const label=filled.length===PEOPLE.length?"所有人都可以":"已填的人都可以";
+  const missing=PEOPLE.filter(p=>!hasData(S.people[p.id])).map(p=>p.name);
   return `<div class="panel">
   <section class="hero">
-    <span class="k">${good.length?"最快可以約":"還沒有共同空檔"}</span>
+    <span class="k">${good.length?(missing.length?"已填的人最快可以約":"最快可以約"):"還沒有共同空檔"}</span>
     <span class="big">${good.length?fmt(good[0])+(HOL[good[0]]?" "+HOL[good[0]]:""):"再調整一下規則看看"}</span>
-    <span class="sub">${label}的日子共 ${good.length} 天${ov?(ov.ok?`・這天共同時段 ${ov.from}–${ov.to}`:"・這天時段沒有重疊"):good.length?"・時段還沒填齊":""}</span>
+    ${missing.length?`<span class="sub warn">還有 ${missing.length} 人沒填（${missing.slice(0,4).map(esc).join("、")}${missing.length>4?"…":""}），等大家填完結果會再變。</span>`:""}<span class="sub">${label}的日子共 ${good.length} 天${ov?(ov.ok?`・這天共同時段 ${ov.from}–${ov.to}`:"・這天時段沒有重疊"):good.length?"・時段還沒填齊":""}</span>
     ${good.length>1?`<div class="chips">${good.slice(1,13).map(k=>`<button class="chip" data-k="${k}">${fmt(k)}${HOL[k]?" "+HOL[k]:""}</button>`).join("")}${good.length>13?`<span class="sub">＋${good.length-13} 天</span>`:""}</div>`:""}
-    <div class="roster">${PEOPLE.map(p=>`<span class="${S.people[p.id]?"":"off"}">${avs(p)}${esc(p.name)} ${S.people[p.id]?"✓":"未填"}</span>`).join("")}</div>
+    <div class="roster">${PEOPLE.map(p=>{const f=hasData(S.people[p.id]);return `<span class="${f?"":"off"}">${avs(p)}${esc(p.name)} ${f?"✓":"未填"}</span>`}).join("")}</div>
   </section>
   ${detail}
   <div class="legend"><span><i class="sw" style="background:var(--ok)"></i>所有人都可以</span><span><i class="sw" style="background:var(--ok-bg)"></i>已填的人都可以</span><span><i class="dot ok" style="display:inline-block"></i>可以</span><span><i class="dot no" style="display:inline-block"></i>不行</span><span><i class="dot" style="display:inline-block"></i>未填</span>・點日期看每個人狀況</div>
   ${monthsHTML((k,d,dow)=>{const sts=PEOPLE.map(p=>status(S.people[p.id],k,dow));const okN=sts.filter(s=>s==="ok").length;
     const cls=filled.length===PEOPLE.length&&okN===PEOPLE.length?" all4":(filled.length&&okN===filled.length?" most":"");
-    const o=okN&&okN===filled.length?dayOverlap(k,dow):null,lb=o&&o.ok&&o.n===okN?`<span class="lb tm1">${hh(o.from)}–${hh(o.to)}</span>`:lab(k);
+    const o=okN&&okN===filled.length?dayOverlap(k,dow):null,lb=o&&o.ok&&o.n===okN?tl(o.from,o.to):lab(k);
     return `<button class="${baseCls(k,dow)}${cls}${S.picked===k?" sel":""}" data-k="${k}" aria-label="${fmt(k)} ${okN} 人可以"><span class="n">${d}</span>${lb}<span class="dots">${sts.map(s=>`<i class="dot ${s==="na"?"":s}"></i>`).join("")}</span></button>`})}
   </div>`;
 }
@@ -653,7 +669,7 @@ function render(){saveUI();
   main.querySelectorAll("details[data-dk]").forEach(d=>{const v=S.det[d.dataset.dk];if(v!==undefined)d.open=v});
   main.style.minHeight="";
   const dock=document.querySelector(".bulk")||[...document.querySelectorAll(".wiznav:not(.hide)")].find(x=>getComputedStyle(x).position==="fixed");
-  document.body.style.paddingBottom=dock?dock.offsetHeight+"px":"";
+  document.body.style.paddingBottom=dock?dock.offsetHeight+"px":"";document.body.style.setProperty("--dock",dock?dock.offsetHeight+"px":"0px");
   if(same){window.scrollTo(0,y);const s2=document.querySelector(".stepcard");if(s2)s2.scrollTop=st}
   else{S.multi=false;S.selDays.clear();S.focusDay=null;window.scrollTo(0,0)}
 }
@@ -848,7 +864,7 @@ async function adminConfigured(){if(!S.api)return true;try{const r=await fetch("
 async function adminLogin(){
   if(!(await adminConfigured())){modal(`<div class="bigic">${IC.lock}</div><h2>還沒設定管理員密碼</h2><p class="hint">部署時沒有填 ADMIN_PASSWORD。請到 Cloudflare 後台 → 這個 Worker → 設定 → 「變數和密碼」新增一個密碼類型的 <b>ADMIN_PASSWORD</b>，儲存後回來重新整理就能登入。</p><div class="row"><button class="btn pri" id="ok">知道了</button></div>`,m=>{m.querySelector("#ok").onclick=closeModal});return}
   modal(`<div class="bigic">${IC.lock}</div><h2>管理員登入</h2><p class="hint">登入後可以新增或刪除成員。</p>
-    <input id="apw" type="password" inputmode="numeric" placeholder="管理員密碼" autocomplete="current-password"><p class="err" id="e"></p>
+    <input id="apw" type="password" placeholder="管理員密碼" autocomplete="current-password"><p class="err" id="e"></p>
     <div class="row"><button class="btn" id="c">取消</button><button class="btn pri" id="ok">登入</button></div>`,m=>{
     m.querySelector("#c").onclick=closeModal;
     const go=async()=>{const v=m.querySelector("#apw").value;if(!v)return;
@@ -889,14 +905,16 @@ function configDialog(){const c=CFG;
       const nc={title:v("#cTitle"),subtitle:v("#cSub"),start:st,end:en,time:{from:f,to:t},holidays:h.o,festivals:fe.o};
       try{await saveConfig(nc);toast("活動設定已儲存");adminPanel()}catch(err){e.textContent="儲存失敗，請重新登入管理員再試"}}})}
 function adminPanel(){let color=COLORS.find(c=>!PEOPLE.some(p=>p.c===c))||COLORS[PEOPLE.length%COLORS.length];
-  modal(`<h2>管理成員</h2><p class="hint">目前 ${PEOPLE.length} 人。刪除成員會一起刪掉他填的資料。</p>
-    <div class="alist">${PEOPLE.map(p=>`<div class="arow"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><b>${esc(p.name)}</b><small>${!S.people[p.id]?"還沒填":S.people[p.id].prefill?"管理員預填":"已填寫"}</small><button class="del" data-fillfor="${p.id}" style="background:var(--ok-bg);color:var(--ok)">代填</button><button class="del" data-del="${p.id}"${PEOPLE.length<=1?" disabled":""}>刪除</button></div>`).join("")}</div>
+  modal(`<h2>管理員</h2>
+    <button class="evcard" id="cfgCard"><span><small>活動設定</small><b>${esc(CFG.title)}</b><em>${CFG.start.replace("-",".")} – ${CFG.end.replace("-",".")}・預設 ${CFG.time.from}–${CFG.time.to}・放假日 ${Object.keys(HOL).length} 天</em></span><i>修改 ›</i></button>
+    <p class="hint" style="margin-top:4px"><b>成員</b>・目前 ${PEOPLE.length} 人。刪除成員會一起刪掉他填的資料。</p>
+    <div class="alist">${PEOPLE.map(p=>`<div class="arow"><span class="av" style="background:${p.c}">${faceSVG(p.id)}</span><b>${esc(p.name)}</b><small>${!S.people[p.id]?"還沒填":S.people[p.id].prefill?"管理員預填":hasData(S.people[p.id])?"已填寫":"填寫中"}</small><button class="del" data-fillfor="${p.id}" style="background:var(--ok-bg);color:var(--ok)">代填</button><button class="del" data-del="${p.id}"${PEOPLE.length<=1?" disabled":""}>刪除</button></div>`).join("")}</div>
     <p class="hint" style="margin-top:4px"><b>新增成員</b></p>
     <div class="addrow"><input id="nn" maxlength="20" placeholder="名字，例如：小明"><button class="btn pri" id="add">新增</button></div>
-    <div class="swatches" role="radiogroup" aria-label="顏色">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" aria-label="顏色 ${c}" aria-pressed="${c===color}"></button>`).join("")}</div>
+    <p class="hint" style="margin:0">顏色</p><div class="swatches" role="radiogroup" aria-label="顏色">${COLORS.map(c=>`<button data-c="${c}" style="background:${c}" aria-label="顏色 ${c}" aria-pressed="${c===color}"></button>`).join("")}</div>
     <p class="err" id="e"></p>
-    <div class="row" style="justify-content:space-between"><button class="btn" id="cfgBtn">${IC.pencil.replace('<svg','<svg style="width:20px;height:20px;vertical-align:-5px;margin-right:4px"')}活動設定</button><span style="flex:1"></span><button class="btn" id="logout">登出管理員</button><button class="btn pri" id="done">完成</button></div>`,m=>{
-    m.querySelector("#cfgBtn").onclick=configDialog;
+    <div class="row"><button class="btn" id="logout">登出管理員</button><button class="btn pri" id="done">完成</button></div>`,m=>{
+    m.querySelector("#cfgCard").onclick=configDialog;
     m.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{color=b.dataset.c;m.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.c===color)))});
     m.querySelector("#done").onclick=closeModal;
     m.querySelectorAll("[data-fillfor]").forEach(b=>b.onclick=()=>{closeModal();openPerson(b.dataset.fillfor)});
